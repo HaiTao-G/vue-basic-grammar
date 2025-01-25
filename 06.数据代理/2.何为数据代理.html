@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- 引入Vue -->
+    <script src="../js/vue.js"></script>
+    <title>何为数据代理</title>
+  </head>
+  <body>
+    <script type="text/javascript">
+      Vue.config.productionTip = false; // 阻止 vue 在启动时生成生产提示。
+
+      let obj = { x: 100 };
+      let obj2 = { y: 200 };
+
+      Object.defineProperty(obj2, "x", {
+        // 当有人读取obj2.x 属性时，get函数(getter)就会被调用，且返回的值就是被代理的对象obj的值
+        get() {
+          console.log("有人读取obj.x的值");
+          return obj.x;
+        },
+
+        // 当有人修改obj2.x 属性时，set函数(setter)就会被调用,且会修改到被代理对象obj的具体值
+        set(value) {
+          obj.x = value;
+          console.log("有人修改了 obj.x 的值，值为：", value);
+        },
+      });
+    </script>
+  </body>
+</html>
