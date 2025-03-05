@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 引入Vue -->
+    <script src="../js/vue.js"></script>
+    <title>事件的基本使用</title>
+</head>
+<body>
+    
+    <!-- 
+       事件的基本使用：
+            1.使用 v-on:xxx 或 @xxx 绑定事件，其中 xxx 是事件名；
+            2.事件的回调需要配置在 emthods 对象中，最终会在 vm 上；
+            3.emthods 中配置的函数，不要用箭头函数！否则this就不是 vm 了；
+            4.methods 中配置的函数，都是被Vue所管理的函数，this 的指向是 vm 或 组件实例对象；
+            5.@click ="demo" 和 @click="demo($event)" 效果一致，但后者对传参更加灵活;
+     -->
+
+    <!-- 容器 -->
+    <div id="root">
+         <h2>欢迎来到{{name}}学习</h2>
+         <!-- <button v-on:click="showInfo">点我提示信息 </button> -->
+         <!-- 简写 -->
+         <button @click="showInfo1">点我提示信息 (不传参)</button>
+         <button @click="showInfo2($event,666)">点我提示信息 (传参,保留event)</button>
+    </div>
+
+    <script type="text/javascript">
+        Vue.config.productionTip=false; // 阻止 vue 在启动时生成生产提示。
+
+       const vm = new Vue({
+           el:'#root',
+           data:{
+               name:'北凉',
+            // 方法放在data中会让vm误认为是数据，生成数据代理，会消耗性能
+            //    showInfo(){
+            //         alert("同学您好!")
+            //    }
+           },
+           methods:{
+               // 参数一：事件对象
+               showInfo1(event){
+                //   console.log(event.target.innerText); // event.target 获取发生事件的目标对象
+                // console.log(this === vm); //此处的 this 就是 vm
+                alert('同学，你好!')
+               },
+               showInfo2(event,number){
+                //   console.log(event.target.innerText); // event.target 获取发生事件的目标对象
+                // console.log(this === vm); //此处的 this 就是 vm
+                console.log('@',event,number);
+               },
+
+           }
+
+        })
+        console.log("@@",vm);
+    </script>
+</body>
+</html>
