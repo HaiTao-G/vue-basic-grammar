@@ -7,6 +7,7 @@ import AppIndex from "@/components/AppIndex.vue";
 Vue.use(Router);
 
 export default new Router({
+    mode: "history",
     routes:[
         {
             name: "Login",
@@ -16,7 +17,10 @@ export default new Router({
         {
             name: "AppIndex",
             path: "/index",
-            component: AppIndex
+            component: AppIndex,
+            meta:{
+                requireAuth: true // 添加该字段，表示进入这个路由是需要登录的
+            }
         }
     ]
 });
