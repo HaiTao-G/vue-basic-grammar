@@ -44,6 +44,8 @@ export default {
   },
   methods: {
     login() {
+      var _this = this;
+      console.log(this.$store.state);
       this.$axios
         .post("/login", {
           username: this.loginFrom.username,
@@ -51,7 +53,9 @@ export default {
         })
         .then((successResponse) => {
           if (successResponse.data.status === 200) {
-            this.$router.replace({ path: "/index" });
+            _this.$store.commit('login',_this.loginForm);
+            var psth = this.$route.query.redirect;
+            this.$router.replace({ path: psth==='/' || psth === undefined ? '/index' : psth });
           }
         })
         .catch((errorResponse) => {
