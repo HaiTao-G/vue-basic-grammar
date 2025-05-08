@@ -31,6 +31,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
   name: "Login",
   data() {
@@ -46,13 +47,13 @@ export default {
     login() {
       var _this = this;
       console.log(this.$store.state);
-      this.$axios
-        .post("/login", {
-          username: this.loginFrom.username,
-          password: this.loginFrom.password,
+      axios.post("/api/login", {
+          username: this.loginForm.username,
+          password: this.loginForm.password,
         })
         .then((successResponse) => {
-          if (successResponse.data.status === 200) {
+          console.log(successResponse);
+          if (successResponse.data.code === 200) {
             _this.$store.commit('login',_this.loginForm);
             var psth = this.$route.query.redirect;
             this.$router.replace({ path: psth==='/' || psth === undefined ? '/index' : psth });
