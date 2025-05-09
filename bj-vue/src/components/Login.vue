@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+// import service from "../api/axios";
 export default {
   name: "Login",
   data() {
@@ -47,7 +47,7 @@ export default {
     login() {
       var _this = this;
       console.log(this.$store.state);
-      axios.post("/api/login", {
+      this.$axios.post("/login", {
           username: this.loginForm.username,
           password: this.loginForm.password,
         })
