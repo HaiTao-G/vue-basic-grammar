@@ -53,7 +53,7 @@ export default {
         })
         .then((successResponse) => {
           console.log(successResponse);
-          if (successResponse.data.code === 200) {
+          if (successResponse.code === 200) {
             _this.$store.commit('login',_this.loginForm);
             var psth = this.$route.query.redirect;
             this.$router.replace({ path: psth==='/' || psth === undefined ? '/index' : psth });

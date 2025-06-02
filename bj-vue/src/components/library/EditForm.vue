@@ -1,9 +1,9 @@
 <template>
      <div>
-    <i class="el-icon-circle-plus-outline"  @click="dialogFormVisible = true"></i>
+    <i class="el-icon-circle-plus-outline"  @click="dialogFromVisible = true"></i>
     <el-dialog
       title="添加/修改图书"
-      :visible.sync="dialogFormVisible"
+      :visible.sync="dialogFromVisible"
       @close="clear">
       <el-form v-model="form" style="text-align: left" ref="dataForm">
         <el-form-item label="书名" :label-width="formLabelWidth" prop="title">
@@ -39,7 +39,7 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button @click="dialogFromVisible = false">取 消</el-button>
         <el-button type="primary" @click="onSubmit">确 定</el-button>
       </div>
     </el-dialog>
@@ -69,7 +69,7 @@ export default {
     };
   },
   methods: {
-    cleat: function () {
+    clear: function () {
       this.form = {
         id: "",
         title: "",

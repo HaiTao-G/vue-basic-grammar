@@ -102,7 +102,7 @@
         // alert(id)
       },
       editBook (item) {
-        this.$refs.edit.dialogFormVisible = true
+        this.$refs.edit.dialogFromVisible = true
         this.$refs.edit.form = {
           id: item.id,
           cover: item.cover,
