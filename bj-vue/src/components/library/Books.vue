@@ -59,18 +59,18 @@
       loadBooks () {
         var _this = this
         this.$axios.get('/books').then(resp => {
+            console.log(resp)
           if (resp && resp.status === 200) {
+            console.log(resp.data)
             _this.books = resp.data
           }
         })
-        _this.books=[];
       },
       handleCurrentChange: function (currentPage) {
         this.currentPage = currentPage
         console.log(this.currentPage)
       },
       searchResult () {
-        console.log("@@@@",1)
         var _this = this
         this.$axios
           .get('/search?keywords=' + this.$refs.searchBar.keywords, {
@@ -102,7 +102,7 @@
         // alert(id)
       },
       editBook (item) {
-        this.$refs.edit.dialogFromVisible = true
+        this.$refs.edit.dialogFormVisible = true
         this.$refs.edit.form = {
           id: item.id,
           cover: item.cover,
