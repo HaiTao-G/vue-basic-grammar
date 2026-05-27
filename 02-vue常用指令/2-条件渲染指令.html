@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app">
+      <!--v-if 基于条件渲染，是否创建和移除元素，适合不频繁切换的场景-->
+      <div v-if="!flag">v-if条件为假时显示</div>
+      <!--v-show 基于条件渲染，切换display:none属性显示阴藏，适合频繁切换的场景-->
+      <div v-show="!flag">v-show条件为假时显示</div>
+    </div>
+    <script src="../js/vue.js"></script>
+    <script>
+      const app = new Vue({
+        el: "#app",
+        data: {
+          flag: false,
+        },
+      });
+    </script>
+  </body>
+</html>

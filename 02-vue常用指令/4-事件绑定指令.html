@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app">
+      <h1>内联语句</h1>
+      <button @click="counter++">点击我</button>
+      <p>点击次数: {{ counter }}</p>
+      <h1>事件函数无参</h1>
+      <!-- 事件函数无参调用时，Vue 会将原生事件对象作为参数传递给事件函数 -->
+      <button @click="incrementCounter">点击我</button>
+      <p>点击次数: {{ counter }}</p>
+      <h1>事件函数传参</h1>
+      <button @click="incrementCounter(5)">可乐5元</button>
+      <button @click="incrementCounter(15)">咖啡15元</button>
+      <button @click="incrementCounter(7)">北冰洋7元</button>
+    </div>
+    <script src="../js/vue.js"></script>
+    <script>
+      new Vue({
+        el: "#app",
+        data: {
+          counter: 0,
+        },
+        methods: {
+          incrementCounter(value) {
+            // 判断传入的 value 是否为数字。
+            // 如果无参调用，value 是原生事件对象 PointerEvent，此时给它设定默认值为 1
+            // if (typeof value !== "number") {
+            //   value = 1;
+            // }
+            this.counter += value;
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

@@ -6,27 +6,15 @@
     <title>Document</title>
   </head>
   <body>
-    <!-- 准备容器-->
     <div id="app">
-      <!--
-      插值表达式注意点：
-      1.只能在标签内部使用 
-      2.使用的数据要在 data 中定义 
-      3.支持的是表达式，非语句 
-      -->
-      <h1>{{ message }}</h1>
-      <h1>{{ message.toUpperCase() }}</h1>
-      <h1>{{ name }}</h1>
-      <h1>{{ money }}</h1>
-      <h1>{{ money + 500 }}</h1>
-      <h1>{{ money >= 100?"大于100":"小于100" }}</h1>
-      <div v-html="htmlContent"></div>
+      <h2>Vue 内容渲染指令</h2>
+      <!-- v-text 指令：将数据作为文本内容渲染到元素中,会覆盖元素原有的内容 -->
+      <p v-text="message">内容：</p>
+      <!-- v-html 指令：将数据作为 HTML 内容渲染到元素中,会覆盖元素原有的内容 -->
+      <p v-html="htmlContent">HTML内容：</p>
     </div>
-
-    <!-- 引入 Vue.js -->
     <script src="../js/vue.js"></script>
     <script>
-      <!-- 创建 Vue 实例 -->
       new Vue({
         el: "#app",
         data: {

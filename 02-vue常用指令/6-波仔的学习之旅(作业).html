@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app">
+      <button v-show="currentImageIndex > 0" @click="prevImage">上一页</button>
+      <div>
+        <img
+          :src="imageUrls[currentImageIndex]"
+          :alt="imageAlts[currentImageIndex]"
+          :title="imageAlts[currentImageIndex]"
+        />
+      </div>
+      <button
+        v-show="currentImageIndex < imageUrls.length - 1"
+        @click="nextImage"
+      >
+        下一页
+      </button>
+    </div>
+    <script src="../js/vue.js"></script>
+    <script>
+      new Vue({
+        el: "#app",
+        data: {
+          currentImageIndex: 0,
+          imageUrls: [
+            "./imgs/10-01.png",
+            "./imgs/10-02.png",
+            "./imgs/11-03.gif",
+          ],
+          imageAlts: ["Image 1", "Image 2", "Image 3"],
+        },
+        methods: {
+          prevImage() {
+            if (this.currentImageIndex > 0) {
+              this.currentImageIndex--;
+            }
+          },
+          nextImage() {
+            if (this.currentImageIndex < this.imageUrls.length - 1) {
+              this.currentImageIndex++;
+            }
+          },
+          reverseMessage() {
+            this.message = this.message.split("").reverse().join("");
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

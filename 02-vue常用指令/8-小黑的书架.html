@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- 准备容器-->
+    <div id="app">
+      <h3>小黑的书架</h3>
+      <ul>
+        <li v-for="book in booksList" :key="book.id">
+          <span>{{book.name}}</span>
+          <span>{{book.author}}</span>
+          <button @click="deleteBook(book.id)">删除</button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 引入 Vue.js -->
+    <script src="../js/vue.js"></script>
+    <script>
+      <!-- 创建 Vue 实例 -->
+      new Vue({
+        el: "#app",
+        data: {
+          booksList: [
+            { id: 1, name: "《红楼梦》", author: "曹雪芹" },
+            { id: 2, name: "《西游记》", author: "吴承恩" },
+            { id: 3, name: "《水浒传》", author: "施耐庵" },
+            { id: 4, name: "《三国演义》", author: "罗贯中" },
+          ],
+        },
+        methods: {
+          // 删除书籍的方法
+          deleteBook(id) {
+            this.booksList = this.booksList.filter((book) => book.id !== id);
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

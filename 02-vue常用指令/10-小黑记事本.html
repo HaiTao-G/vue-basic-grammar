@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- 准备容器-->
+    <div id="app">
+      <h1>小黑记事本</h1>
+      <div>
+        <input type="text" v-model="newNote" placeholder="请输入内容" />
+        <button @click="addNote">添加</button>
+      </div>
+      <ul>
+        <li v-for="(note, index) in notes" :key="index">
+          {{ note }}
+          <button @click="deleteNote(index)">删除</button>
+        </li>
+      </ul>
+      <p>合计：{{ notes.length }} 条记录</p>
+      <button @click="clearNotes">清空</button>
+    </div>
+
+    <!-- 引入 Vue.js -->
+    <script src="../js/vue.js"></script>
+    <script>
+      <!-- 创建 Vue 实例 -->
+      new Vue({
+        el: "#app",
+        data: {
+          newNote: "",
+          notes: [],
+        },
+        methods: {
+          addNote() {
+            if (this.newNote.trim() !== "") {
+              this.notes.push(this.newNote);
+              this.newNote = "";
+            }
+          },
+          deleteNote(index) {
+            this.notes.splice(index, 1);
+          },
+          clearNotes() {
+            this.notes = [];
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

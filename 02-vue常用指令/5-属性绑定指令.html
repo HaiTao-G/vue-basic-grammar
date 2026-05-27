@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app">
+      <img v-bind:src="imageSrc" v-bind:title="imageAlt" />
+      <img :src="imgUrl" :title="msg" alt="111" />
+    </div>
+    <script src="../js/vue.js"></script>
+    <script>
+      new Vue({
+        el: "#app",
+        data: {
+          imageSrc: "https://vuejs.org/images/logo.png",
+          imageAlt: "Vue.js Logo",
+          imgUrl: "./imgs/10-01.png",
+          msg: "Hello 波仔!",
+        },
+      });
+    </script>
+  </body>
+</html>
