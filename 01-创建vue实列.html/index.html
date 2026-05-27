@@ -6,22 +6,32 @@
     <title>Document</title>
   </head>
   <body>
-
     <!-- 准备容器-->
     <div id="app">
+      <!--
+      插值表达式注意点：
+      1.只能在标签内部使用 
+      2.使用的数据要在 data 中定义 
+      3.支持的是表达式，非语句 
+      -->
       <h1>{{ message }}</h1>
+      <h1>{{ message.toUpperCase() }}</h1>
+      <h1>{{ name }}</h1>
+      <div v-html="htmlContent"></div>
     </div>
 
     <!-- 引入 Vue.js -->
     <script src="../js/vue.js"></script>
     <script>
-        <!-- 创建 Vue 实例 -->
+      <!-- 创建 Vue 实例 -->
       new Vue({
-        el: '#app',
+        el: "#app",
         data: {
-          message: 'Hello, Vue!'
-        }
-      })
+          message: "Hello, Vue!",
+          name: "Vue.js",
+          htmlContent: "<p>This is <strong>HTML</strong> content.</p>",
+        },
+      });
     </script>
   </body>
 </html>
