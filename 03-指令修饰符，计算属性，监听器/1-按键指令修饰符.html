@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>按键指令修饰符</h1>
+    <p>
+      按键指令修饰符是一个特殊的语法，用于监听特定的按键事件。它允许你指定一个或多个按键，当这些按键被按下时，指令会被触发。
+    </p>
+    <p>
+      使用按键指令修饰符，你可以轻松地创建快捷键或响应特定的键盘事件。例如，你可以监听
+      "Enter" 键来提交表单，或者监听 "Escape" 键来关闭模态窗口。
+    </p>
+    <p>
+      要使用按键指令修饰符，你需要在指令名称后面添加一个点（.）和按键名称。例如，v-on:keydown.enter
+      将监听 "Enter" 键的按下事件。
+    </p>
+    <p>
+      你还可以同时监听多个按键，例如 v-on:keydown.ctrl.enter 将监听 "Ctrl" 和
+      "Enter" 键的组合事件。
+    </p>
+    <div id="app">
+      <input @keydown.enter="submitForm" placeholder="按 Enter 提交表单" />
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script>
+      new Vue({
+        el: "#app",
+        methods: {
+          submitForm() {
+            alert("表单已提交！");
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
