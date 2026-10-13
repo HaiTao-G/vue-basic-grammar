@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>04 - 动态路由与重定向</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+      }
+      .box {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      h1 {
+        font-size: 18px;
+        margin-top: 0;
+      }
+      h1 span {
+        font-size: 12px;
+        color: #909399;
+        font-weight: normal;
+      }
+      .nav a,
+      button {
+        display: inline-block;
+        padding: 6px 14px;
+        margin: 4px 8px 4px 0;
+        text-decoration: none;
+        color: #409eff;
+        border: 1px solid #b3d8ff;
+        border-radius: 6px;
+        font-size: 14px;
+        background: #fff;
+        cursor: pointer;
+      }
+      .nav a.router-link-active {
+        background: #409eff;
+        color: #fff;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      .page {
+        background: #f8f9fb;
+        border-left: 4px solid #409eff;
+        padding: 16px;
+        border-radius: 4px;
+      }
+      .notfound {
+        text-align: center;
+        padding: 30px;
+      }
+      .notfound h2 {
+        color: #f56c6c;
+        font-size: 48px;
+        margin: 0;
+      }
+      .log {
+        background: #1e1e1e;
+        color: #7ec699;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: Consolas, monospace;
+        max-height: 140px;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div class="box">
+        <h1>一、动态路由匹配 <span>path: '/goods/:id' —— 一个规则匹配无数个路径</span></h1>
+        <div class="nav">
+          <router-link to="/goods/1">商品 1</router-link>
+          <router-link to="/goods/2">商品 2</router-link>
+          <router-link to="/goods/3">商品 3</router-link>
+          <router-link to="/goods">不带 id（可选参数）</router-link>
+        </div>
+        <p style="font-size:13px;color:#909399">
+          观察：不管 id 是多少，用的都是同一个 Goods 组件，URL 不同但组件实例被"复用"了。
+        </p>
+      </div>
+
+      <div class="box">
+        <h1>二、重定向与别名 <span>redirect / alias</span></h1>
+        <div class="nav">
+          <router-link to="/">访问根路径 /（会被重定向到 /goods/1）</router-link>
+          <router-link to="/old">访问旧地址 /old（会被重定向到 /goods/2）</router-link>
+          <router-link to="/shop">访问别名 /shop（地址不变，渲染的却是 Goods 组件）</router-link>
+        </div>
+      </div>
+
+      <div class="box">
+        <h1>三、404 通配符 <span>path: '*' 或 '*'（必须放在最后）</span></h1>
+        <div class="nav">
+          <router-link to="/this-page-not-exist">访问一个不存在的地址</router-link>
+        </div>
+      </div>
+
+      <router-view></router-view>
+
+      <div class="box" v-if="logs.length">
+        <h1>四、监听路由参数变化 <span>watch: { '$route'() {...} } —— 组件复用时 created 不会再次触发</span></h1>
+        <div class="log">
+          <div v-for="(item, index) in logs" :key="index">{{ item }}</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script src="../js/vue-router.js"></script>
+    <script>
+      // 商品页：用 :id 接收动态参数
+      const Goods = {
+        template: `
+          <div class="box page">
+            <h2>商品详情</h2>
+            <p>当前商品 id = <code>{{ $route.params.id || '（未传，走了可选参数的分支）' }}</code></p>
+            <p style="color:#909399;font-size:13px">$route.path = {{ $route.path }}</p>
+          </div>`,
+      };
+
+      const NotFound = {
+        template: `
+          <div class="box notfound">
+            <h2>404</h2>
+            <p>页面走丢了，请检查地址是否正确。</p>
+            <p style="color:#909399;font-size:13px">你访问的是：{{ $route.path }}</p>
+          </div>`,
+      };
+
+      const routes = [
+        // 重定向：访问 /a 时自动跳到 /b（用户看到的地址栏会变成 /b）
+        { path: "/", redirect: "/goods/1" },
+
+        // 动态路由：:id 是参数占位符，匹配 /goods/1、/goods/abc 等
+        // 冒号后面的 :id? 表示这个参数可选（/goods 也能匹配上）
+        // alias：别名，访问 /shop 时地址栏显示 /shop，但渲染的是这条规则的组件
+        { path: "/goods/:id?", name: "goods", component: Goods, alias: "/shop" },
+
+        // 重定向到具名路由（推荐写法，路径变了也不用改这里）
+        { path: "/old", redirect: { name: "goods", params: { id: 2 } } },
+
+        // 通配符：匹配所有前面没匹配上的路径，必须放在 routes 数组的最后
+        { path: "*", component: NotFound },
+      ];
+
+      const router = new VueRouter({ routes });
+
+      const app = new Vue({
+        el: "#app",
+        router,
+        data: {
+          logs: [],
+        },
+        watch: {
+          // 重点：从 /goods/1 切到 /goods/2 时，组件是复用的，
+          // created / mounted 不会再次执行，想拿到新参数必须监听 $route
+          $route(to, from) {
+            this.logs.unshift(
+              `[${new Date().toLocaleTimeString()}] 路由变化：${from.fullPath}  ➜  ${to.fullPath}`,
+            );
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

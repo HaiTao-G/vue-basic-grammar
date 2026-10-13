@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>03 - 路由传参（query 与 params）</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+      }
+      .box {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      h1 {
+        font-size: 18px;
+        margin-top: 0;
+      }
+      h1 span {
+        font-size: 12px;
+        color: #909399;
+        font-weight: normal;
+      }
+      button,
+      input {
+        padding: 6px 12px;
+        margin: 4px 8px 4px 0;
+        border: 1px solid #dcdfe6;
+        border-radius: 6px;
+        background: #fff;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #409eff;
+        color: #409eff;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      .page {
+        background: #f8f9fb;
+        border-left: 4px solid #67c23a;
+        padding: 16px;
+        border-radius: 4px;
+      }
+      .warn {
+        background: #fdf6ec;
+        border-left: 4px solid #e6a23c;
+        padding: 12px 16px;
+        font-size: 13px;
+        color: #b88230;
+        line-height: 1.8;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- ==================== query 传参 ==================== -->
+      <div class="box">
+        <h1>一、query 传参 <span>地址形如 /detail?id=1&amp;kw=vue，参数在 ? 后面</span></h1>
+
+        <!-- 声明式：to 传对象，query 字段 -->
+        <router-link :to="{ path: '/detail', query: { id: 1, kw: 'vue' } }">
+          <button>声明式：进入详情（id=1, kw=vue）</button>
+        </router-link>
+
+        <!-- 编程式：this.$router.push({ path, query }) -->
+        <button @click="goDetailQuery">编程式：进入详情（id=2, kw=router）</button>
+        <p>
+          <input v-model="keyword" placeholder="输入搜索关键字，按回车跳转" @keyup.enter="search" />
+        </p>
+      </div>
+
+      <!-- ==================== params 传参 ==================== -->
+      <div class="box">
+        <h1>二、params 传参 <span>地址形如 /user/100，参数是路径的一部分，必须在 routes 里用 :xxx 占位</span></h1>
+
+        <!-- 注意：params 必须配合 name 使用，用 path 写会丢参数！ -->
+        <router-link :to="{ name: 'user', params: { id: 100, name: '海涛' } }">
+          <button>声明式：进入用户页（id=100）</button>
+        </router-link>
+
+        <button @click="goUserParams">编程式：进入用户页（id=200）</button>
+      </div>
+
+      <!-- ==================== 对比说明 ==================== -->
+      <div class="box">
+        <h1>三、query 与 params 的区别</h1>
+        <table border="0" cellpadding="8" style="border-collapse: collapse; width: 100%; font-size: 14px">
+          <tr style="background: #f0f2f5">
+            <th align="left">对比项</th>
+            <th align="left">query</th>
+            <th align="left">params</th>
+          </tr>
+          <tr>
+            <td>地址长相</td>
+            <td><code>/detail?id=1</code></td>
+            <td><code>/user/100</code></td>
+          </tr>
+          <tr>
+            <td>取值方式</td>
+            <td><code>this.$route.query.id</code></td>
+            <td><code>this.$route.params.id</code></td>
+          </tr>
+          <tr>
+            <td>路由规则要求</td>
+            <td>无需配置</td>
+            <td>必须写 <code>path: '/user/:id'</code></td>
+          </tr>
+          <tr>
+            <td>跳转写法要求</td>
+            <td>path 或 name 都行</td>
+            <td><b>必须用 name</b></td>
+          </tr>
+          <tr>
+            <td>刷新后是否保留</td>
+            <td>保留</td>
+            <td>hash 模式下会丢</td>
+          </tr>
+        </table>
+        <div class="warn">
+          实践建议：需要刷新后仍然存在的参数（筛选条件、翻页页码、搜索词）用 <b>query</b>；
+          只是临时传递、不希望暴露在地址栏的参数用 <b>params</b>。
+        </div>
+      </div>
+
+      <router-view></router-view>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script src="../js/vue-router.js"></script>
+    <script>
+      // 详情页：读取 query 参数
+      const Detail = {
+        template: `
+          <div class="box page">
+            <h2>商品详情页</h2>
+            <p>收到的 query 参数：</p>
+            <p>id = <code>{{ $route.query.id }}</code></p>
+            <p>kw = <code>{{ $route.query.kw }}</code></p>
+            <p style="color:#909399;font-size:13px">完整地址：{{ $route.fullPath }}</p>
+          </div>`,
+      };
+
+      // 用户页：读取 params 参数
+      const User = {
+        template: `
+          <div class="box page">
+            <h2>用户主页</h2>
+            <p>收到的 params 参数：</p>
+            <p>id = <code>{{ $route.params.id }}</code></p>
+            <p>name = <code>{{ $route.params.name }}</code></p>
+            <p style="color:#909399;font-size:13px">完整地址：{{ $route.fullPath }}</p>
+          </div>`,
+      };
+
+      const routes = [
+        // query 不需要在规则里占位，正常写 path 即可
+        { path: "/detail", component: Detail },
+        // params 必须在 path 中用 :参数名 占位，并给它一个 name
+        { path: "/user/:id/:name", name: "user", component: User },
+      ];
+
+      const router = new VueRouter({ routes });
+
+      new Vue({
+        el: "#app",
+        router,
+        data: {
+          keyword: "",
+        },
+        methods: {
+          // push 对象写法传 query
+          goDetailQuery() {
+            this.$router.push({
+              path: "/detail",
+              query: { id: 2, kw: "router" },
+            });
+          },
+
+          // 搜索：把输入框的值放进 query
+          search() {
+            if (!this.keyword.trim()) return;
+            this.$router.push({
+              path: "/detail",
+              query: { id: 3, kw: this.keyword },
+            });
+          },
+
+          // push 对象写法传 params —— 注意用的是 name 不是 path
+          goUserParams() {
+            this.$router.push({
+              name: "user",
+              params: { id: 200, name: "程序员" },
+            });
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

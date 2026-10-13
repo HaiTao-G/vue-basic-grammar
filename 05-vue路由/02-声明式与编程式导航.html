@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>02 - 声明式与编程式导航</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      .box {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      .nav a {
+        margin-right: 12px;
+        padding: 6px 14px;
+        text-decoration: none;
+        color: #409eff;
+        border: 1px solid #b3d8ff;
+        border-radius: 6px;
+        font-size: 14px;
+      }
+      .nav a.router-link-active {
+        background: #409eff;
+        color: #fff;
+      }
+      button {
+        padding: 6px 14px;
+        margin: 4px 8px 4px 0;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #409eff;
+        color: #409eff;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      .page {
+        margin-top: 12px;
+        padding: 16px;
+        background: #f8f9fb;
+        border-left: 4px solid #409eff;
+      }
+      .label {
+        color: #909399;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!--
+        ========== 方式一：声明式导航 ==========
+        用 <router-link to="..."> 声明"要跳到哪"，本质是给你生成一个 a 标签。
+        适合：写在模板里的、固定的导航入口（顶部菜单、侧边栏）
+      -->
+      <div class="box">
+        <h1>方式一：声明式导航（router-link）</h1>
+        <div class="nav">
+          <router-link to="/home">首页</router-link>
+          <router-link to="/user">用户中心</router-link>
+          <!-- to 也可以传对象，后面 03 传参时更常用 -->
+          <router-link :to="{ path: '/home' }">首页（对象写法）</router-link>
+        </div>
+      </div>
+
+      <!--
+        ========== 方式二：编程式导航 ==========
+        在 JS 里通过 this.$router 的方法跳转。
+        适合：需要先做判断 / 请求成功后再跳转的场景（登录成功跳首页、下单成功跳订单页）
+      -->
+      <div class="box">
+        <h1>方式二：编程式导航（$router 方法）</h1>
+        <button @click="goHome">push 跳首页（有历史记录）</button>
+        <button @click="replaceHome">replace 跳首页（不留记录）</button>
+        <button @click="back">back 返回上一页</button>
+        <button @click="forward">forward 前进</button>
+        <button @click="goStep">go(1) 前进 1 步</button>
+      </div>
+
+      <!-- 实时显示当前路由信息，直观感受 $route -->
+      <div class="box">
+        <h1>当前路由信息（$route）</h1>
+        <p class="label">
+          path：<code>{{ $route.path }}</code> ｜
+          完整地址 fullPath：<code>{{ $route.fullPath }}</code>
+        </p>
+        <p class="label">
+          路由名称 name：<code>{{ $route.name || '未命名' }}</code>
+        </p>
+      </div>
+
+      <router-view></router-view>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script src="../js/vue-router.js"></script>
+    <script>
+      const Home = {
+        template: `<div class="box"><h2>首页</h2><p>你已来到首页</p></div>`,
+      };
+      const User = {
+        template: `<div class="box"><h2>用户中心</h2><p>这里是用户中心</p></div>`,
+      };
+
+      const routes = [
+        // 给路由加个 name，编程式导航时可以用 { name: 'xxx' } 来跳
+        { path: "/home", name: "home", component: Home },
+        { path: "/user", name: "user", component: User },
+      ];
+
+      const router = new VueRouter({ routes });
+
+      new Vue({
+        el: "#app",
+        router,
+        methods: {
+          // push：跳转并往浏览器历史里压入一条记录 -> 可以按"后退"回来
+          goHome() {
+            this.$router.push("/home");
+            // 等价写法：this.$router.push({ name: 'home' })
+          },
+
+          // replace：跳转但"替换"当前记录 -> 按后退回不到这一页
+          // 常用于：登录成功后跳首页（防止用户后退回到登录页）
+          replaceHome() {
+            this.$router.replace("/home");
+          },
+
+          // back：返回上一页（相当于浏览器后退按钮）
+          back() {
+            this.$router.back();
+          },
+
+          // forward：前进到下一页
+          forward() {
+            this.$router.forward();
+          },
+
+          // go(n)：正数前进 n 步，负数后退 n 步
+          goStep() {
+            this.$router.go(1);
+          },
+        },
+      });
+
+      /* ============================================================
+        核心区别总结：$route 和 $router 千万别搞混
+
+        this.$route  —— 当前路由的"信息对象"（只读）
+                        path / fullPath / query / params / name / meta
+
+        this.$router —— 路由的"实例"（操作跳转）
+                        push / replace / go / back / forward
+
+        记忆法：$route = 我在哪（名词，读）；$router = 我要去哪（动词，操作）
+        ============================================================ */
+    </script>
+  </body>
+</html>

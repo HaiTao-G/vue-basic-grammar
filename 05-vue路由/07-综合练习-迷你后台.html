@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>07 - 综合练习：迷你后台管理</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        background: #f0f2f5;
+        color: #303133;
+      }
+      /* ============ 整体布局 ============ */
+      .layout {
+        display: flex;
+        min-height: 100vh;
+      }
+      .aside {
+        width: 200px;
+        background: #304156;
+        color: #bfcbd9;
+        flex-shrink: 0;
+      }
+      .aside .logo {
+        height: 56px;
+        line-height: 56px;
+        text-align: center;
+        color: #fff;
+        font-weight: bold;
+        letter-spacing: 1px;
+        border-bottom: 1px solid #3a4b61;
+      }
+      .aside a {
+        display: block;
+        padding: 14px 22px;
+        color: #bfcbd9;
+        text-decoration: none;
+        font-size: 14px;
+        border-left: 3px solid transparent;
+      }
+      .aside a:hover {
+        background: #263445;
+        color: #fff;
+      }
+      .aside a.router-link-active {
+        background: #263445;
+        color: #409eff;
+        border-left-color: #409eff;
+      }
+      .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .header {
+        height: 56px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      }
+      .header .crumb {
+        font-size: 14px;
+        color: #909399;
+      }
+      .header .user {
+        font-size: 14px;
+      }
+      .header button {
+        margin-left: 12px;
+        padding: 5px 12px;
+        font-size: 13px;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .content {
+        padding: 20px;
+        flex: 1;
+      }
+      .card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+      }
+      h2 {
+        font-size: 17px;
+        margin: 0 0 16px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid #ebeef5;
+      }
+      th {
+        background: #fafafa;
+        color: #909399;
+        font-weight: normal;
+      }
+      a.link {
+        color: #409eff;
+        text-decoration: none;
+      }
+      .btn {
+        padding: 6px 16px;
+        border: none;
+        border-radius: 4px;
+        background: #409eff;
+        color: #fff;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .sub-nav {
+        margin-bottom: 16px;
+      }
+      .sub-nav a {
+        display: inline-block;
+        padding: 5px 14px;
+        margin-right: 10px;
+        font-size: 14px;
+        text-decoration: none;
+        color: #606266;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+      }
+      .sub-nav a.router-link-active {
+        background: #ecf5ff;
+        color: #409eff;
+        border-color: #409eff;
+      }
+      input {
+        padding: 8px 12px;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+        width: 220px;
+        margin-right: 10px;
+      }
+      .login-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+      }
+      .login-box {
+        width: 360px;
+        background: #fff;
+        padding: 32px;
+        border-radius: 10px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+      }
+      .login-box h2 {
+        text-align: center;
+      }
+      .login-box input {
+        width: 100%;
+        margin: 0 0 14px;
+      }
+      .login-box .btn {
+        width: 100%;
+        padding: 10px;
+      }
+      .empty {
+        text-align: center;
+        color: #c0c4cc;
+        padding: 40px 0;
+      }
+      .tag {
+        display: inline-block;
+        font-size: 12px;
+        padding: 1px 8px;
+        border-radius: 10px;
+        background: #f0f9eb;
+        color: #67c23a;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!--
+        布局说明：登录页是"整页"，后台是"侧边栏 + 内容区"。
+        这里用 $route.meta.layout 判断要不要显示侧边栏，是常见做法。
+      -->
+      <div v-if="$route.path === '/login'" class="login-wrap">
+        <router-view></router-view>
+      </div>
+
+      <div v-else class="layout">
+        <!-- ============ 左侧菜单（一级导航）============ -->
+        <aside class="aside">
+          <div class="logo">VUE 管理后台</div>
+          <router-link to="/dashboard">📊 工作台</router-link>
+          <router-link to="/goods">📦 商品管理</router-link>
+          <router-link to="/users">👤 用户管理</router-link>
+        </aside>
+
+        <div class="main">
+          <!-- ============ 顶部栏 ============ -->
+          <header class="header">
+            <div class="crumb">
+              当前位置：<code>{{ $route.path }}</code>
+            </div>
+            <div class="user">
+              <span>👋 {{ username }}</span>
+              <button @click="logout">退出登录</button>
+            </div>
+          </header>
+
+          <!-- ============ 内容区 ============ -->
+          <div class="content">
+            <router-view></router-view>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script src="../js/vue-router.js"></script>
+    <script>
+      /* =========================================================
+         模拟后端接口：登录时下发的 token 存在 localStorage 里
+         （file:// 协议下 localStorage 可用；try/catch 是为了保险）
+         ========================================================= */
+      const TOKEN_KEY = "demo_token";
+      function getToken() {
+        try {
+          return localStorage.getItem(TOKEN_KEY);
+        } catch (e) {
+          return null;
+        }
+      }
+      function setToken(val) {
+        try {
+          if (val) localStorage.setItem(TOKEN_KEY, val);
+          else localStorage.removeItem(TOKEN_KEY);
+        } catch (e) {
+          /* 忽略 */
+        }
+      }
+
+      // 模拟商品数据
+      const GOODS = [
+        { id: 1, name: "Apple iPhone 15", price: 5999, stock: 120 },
+        { id: 2, name: "小米 14 Pro", price: 4999, stock: 88 },
+        { id: 3, name: "华为 Mate 60", price: 6999, stock: 45 },
+        { id: 4, name: "机械键盘 Keychron K8", price: 599, stock: 300 },
+      ];
+
+      /* ==================== 页面组件 ==================== */
+
+      // 登录页
+      const Login = {
+        data() {
+          return { form: { username: "admin", password: "123456" } };
+        },
+        methods: {
+          doLogin() {
+            if (!this.form.username || !this.form.password) {
+              return alert("请填写账号和密码");
+            }
+            // 真实项目这里是发请求拿 token，这里直接模拟成功
+            setToken("mock-token-" + Date.now());
+            // 登录后回到"原本想去的页面"
+            const redirect = this.$route.query.redirect || "/dashboard";
+            this.$router.replace(redirect);
+          },
+        },
+        template: `
+          <div class="login-box">
+            <h2>后台登录</h2>
+            <p style="font-size:13px;color:#909399;text-align:center">
+              任意账号密码即可登录（演示用）
+            </p>
+            <input v-model="form.username" placeholder="用户名" />
+            <input v-model="form.password" type="password" placeholder="密码" />
+            <button class="btn" @click="doLogin">登 录</button>
+            <p style="font-size:12px;color:#909399;text-align:center;margin-top:14px">
+              带上来的 redirect = <code>{{ $route.query.redirect || '无' }}</code>
+            </p>
+          </div>`,
+      };
+
+      // 工作台
+      const Dashboard = {
+        template: `
+          <div class="card">
+            <h2>工作台</h2>
+            <p>欢迎回来，这里是系统首页。</p>
+            <p style="color:#909399;font-size:13px">
+              小技巧：把 <code>#/dashboard</code> 手动改成 <code>#/goods/detail/2</code>
+              再回车，路由守卫依然会生效，退出登录后会被挡回登录页。
+            </p>
+          </div>`,
+      };
+
+      // 商品列表（父级容器，内含二级 router-view）
+      const Goods = {
+        template: `
+          <div class="card">
+            <h2>商品管理</h2>
+            <div class="sub-nav">
+              <router-link to="/goods/list">商品列表</router-link>
+              <router-link to="/goods/detail/1">商品详情（默认看第 1 个）</router-link>
+            </div>
+            <!-- 二级路由出口 -->
+            <router-view></router-view>
+          </div>`,
+      };
+
+      // 商品列表（子）
+      const GoodsList = {
+        data() {
+          return { goods: GOODS, keyword: "" };
+        },
+        computed: {
+          filtered() {
+            return this.goods.filter((g) => g.name.includes(this.keyword));
+          },
+        },
+        template: `
+          <div>
+            <p>
+              <input v-model="keyword" placeholder="搜索商品名..." />
+              <span style="font-size:13px;color:#909399">共 {{ filtered.length }} 条</span>
+            </p>
+            <table>
+              <tr><th>ID</th><th>商品名称</th><th>价格</th><th>库存</th><th>操作</th></tr>
+              <tr v-for="item in filtered" :key="item.id">
+                <td>{{ item.id }}</td>
+                <td>{{ item.name }}</td>
+                <td>¥{{ item.price }}</td>
+                <td>{{ item.stock }}</td>
+                <td>
+                  <!-- 编程式导航 + params 传参 -->
+                  <a class="link" href="javascript:;" @click="goDetail(item.id)">查看详情</a>
+                </td>
+              </tr>
+            </table>
+            <p v-if="!filtered.length" class="empty">没有匹配的商品</p>
+          </div>`,
+        methods: {
+          goDetail(id) {
+            // 用具名路由 + params 跳转，地址形如 #/goods/detail/2
+            this.$router.push({ name: "goodsDetail", params: { id: id } });
+          },
+        },
+      };
+
+      // 商品详情（子）：动态路由读参数
+      const GoodsDetail = {
+        computed: {
+          // 根据 URL 上的 id 从数据里找出对应商品
+          item() {
+            const id = Number(this.$route.params.id);
+            return GOODS.find((g) => g.id === id);
+          },
+        },
+        template: `
+          <div>
+            <div v-if="item">
+              <h3>{{ item.name }}</h3>
+              <table>
+                <tr><th>商品 ID</th><td>{{ item.id }}</td></tr>
+                <tr><th>价格</th><td>¥{{ item.price }}</td></tr>
+                <tr><th>库存</th><td>{{ item.stock }} 件 <span class="tag">有货</span></td></tr>
+              </table>
+            </div>
+            <p v-else class="empty">没有找到 id = {{ $route.params.id }} 的商品</p>
+            <p style="font-size:13px;color:#909399">
+              从列表点不同商品时 URL 变了但组件被复用，所以这里用的是 <code>computed</code>
+              依赖 <code>$route.params.id</code> 自动重算。
+            </p>
+          </div>`,
+      };
+
+      // 用户管理
+      const Users = {
+        data() {
+          return {
+            users: [
+              { id: 1, name: "海涛", role: "管理员" },
+              { id: 2, name: "小明", role: "运营" },
+              { id: 3, name: "小红", role: "客服" },
+            ],
+          };
+        },
+        template: `
+          <div class="card">
+            <h2>用户管理</h2>
+            <table>
+              <tr><th>ID</th><th>姓名</th><th>角色</th></tr>
+              <tr v-for="u in users" :key="u.id">
+                <td>{{ u.id }}</td><td>{{ u.name }}</td><td>{{ u.role }}</td>
+              </tr>
+            </table>
+          </div>`,
+      };
+
+      const NotFound = {
+        template: `
+          <div class="card empty">
+            <h2 style="color:#f56c6c">404</h2>
+            <p>找不到页面：{{ $route.path }}</p>
+            <router-link class="link" to="/dashboard">返回工作台</router-link>
+          </div>`,
+      };
+
+      /* ==================== 路由表 ==================== */
+      const routes = [
+        // 根路径重定向到工作台
+        { path: "/", redirect: "/dashboard" },
+
+        { path: "/login", component: Login },
+
+        {
+          path: "/dashboard",
+          component: Dashboard,
+          meta: { requiresAuth: true },
+        },
+        {
+          path: "/goods",
+          component: Goods,
+          meta: { requiresAuth: true },
+          // 进入 /goods 时重定向到子路由
+          redirect: "/goods/list",
+          children: [
+            { path: "list", component: GoodsList },
+            // 动态路由：地址形如 /goods/detail/2
+            {
+              path: "detail/:id",
+              name: "goodsDetail",
+              component: GoodsDetail,
+              // 补充写法：写成 props: true 后，组件里可以用 props: ['id'] 接收参数，
+              // 适合页面不依赖 $route 的场景。本例演示的是 $route.params 的取法。
+            },
+          ],
+        },
+        {
+          path: "/users",
+          component: Users,
+          meta: { requiresAuth: true },
+        },
+
+        // 404 放最后
+        { path: "*", component: NotFound },
+      ];
+
+      const router = new VueRouter({ routes });
+
+      /* ==================== 全局前置守卫 ==================== */
+      router.beforeEach((to, from, next) => {
+        const logged = !!getToken();
+
+        // ⚠️ 重要坑点：to.meta 只取"最深层"那条匹配路由的 meta，父级的 meta 不会自动继承！
+        //    例如访问 /goods/detail/2，匹配到的是子路由 detail/:id，它的 meta 是空的，
+        //    所以写 to.meta.requiresAuth 会得到 undefined，导致守卫形同虚设。
+        //    正确做法：用 to.matched.some() 检查整条匹配链（父 + 子）上有没有 requiresAuth。
+        const needAuth = to.matched.some((record) => record.meta.requiresAuth);
+
+        if (needAuth && !logged) {
+          // 没登录 -> 去登录页，并记住他想去哪
+          console.log(`[守卫] ${to.fullPath} 需要登录，已拦截`);
+          next({ path: "/login", query: { redirect: to.fullPath } });
+        } else if (to.path === "/login" && logged) {
+          // 已登录还想去登录页 -> 直接送去工作台
+          next("/dashboard");
+        } else {
+          next();
+        }
+      });
+
+      /* ==================== 根实例 ==================== */
+      new Vue({
+        el: "#app",
+        router,
+        data: {
+          username: "admin",
+        },
+        methods: {
+          logout() {
+            setToken(null);
+            // 用 replace 而不是 push：避免用户点"后退"又回到后台页面
+            this.$router.replace("/login");
+          },
+        },
+      });
+
+      /* =========================================================
+         本项目用到的知识点回顾：
+         1. 路由表配置 + 重定向 redirect + 通配符 404
+         2. 嵌套路由 children + 二级 router-view（侧边栏菜单 → 内容区）
+         3. 声明式导航（router-link）与编程式导航（$router.push）
+         4. 动态路由 detail/:id + $route.params 取参
+         5. 全局前置守卫 beforeEach + meta.requiresAuth 做登录拦截
+         6. 登录后 redirect 回跳（query 传参的经典应用场景）
+         ========================================================= */
+    </script>
+  </body>
+</html>

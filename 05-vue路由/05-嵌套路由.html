@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>05 - 嵌套路由</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+      }
+      .box {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      h1 {
+        font-size: 18px;
+        margin-top: 0;
+      }
+      .tabs {
+        display: flex;
+        border-bottom: 1px solid #e4e7ed;
+        margin: 16px 0;
+      }
+      .tabs a {
+        padding: 10px 18px;
+        text-decoration: none;
+        color: #606266;
+        font-size: 14px;
+        border-bottom: 2px solid transparent;
+      }
+      .tabs a.router-link-active {
+        color: #409eff;
+        border-bottom-color: #409eff;
+      }
+      .sub {
+        padding: 16px;
+        background: #f8f9fb;
+        border-radius: 6px;
+        min-height: 60px;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      .note {
+        font-size: 13px;
+        color: #909399;
+        line-height: 1.9;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- 一级路由出口：首页 / 我的 -->
+      <div class="box">
+        <div class="tabs">
+          <router-link to="/home">首页</router-link>
+          <router-link to="/mine">我的</router-link>
+        </div>
+        <router-view></router-view>
+      </div>
+
+      <div class="box note">
+        <b>嵌套路由的关键点：</b><br />
+        1. 子路由写在父路由的 <code>children</code> 数组里，<b>子路由的 path 不写开头的 /</b><br />
+        2. 父组件模板里要再放一个 <code>&lt;router-view&gt;</code> 作为子路由出口<br />
+        3. 默认子路由：把 path 写成 <code>''</code>，进入父级时自动显示它<br />
+        4. 地址栏形如 <code>#/mine/orders</code>，第一段定位父组件，第二段定位子组件
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script src="../js/vue-router.js"></script>
+    <script>
+      // ---------- 子组件（二级页面）----------
+      const MineInfo = {
+        template: `
+          <div class="sub">
+            <h3>个人信息</h3>
+            <p>用户名：海涛</p>
+            <p>会员等级：黄金会员</p>
+          </div>`,
+      };
+
+      const MineOrders = {
+        data() {
+          return {
+            orders: [
+              { id: "A1001", title: "Vue 实战课程", price: 199 },
+              { id: "A1002", title: "数据结构与算法", price: 299 },
+            ],
+          };
+        },
+        template: `
+          <div class="sub">
+            <h3>我的订单</h3>
+            <table cellpadding="8" style="border-collapse:collapse;width:100%">
+              <tr style="background:#eef1f6;text-align:left">
+                <th>订单号</th><th>商品</th><th>金额</th>
+              </tr>
+              <tr v-for="item in orders" :key="item.id">
+                <td>{{ item.id }}</td>
+                <td>{{ item.title }}</td>
+                <td>¥{{ item.price }}</td>
+              </tr>
+            </table>
+          </div>`,
+      };
+
+      // ---------- 父组件：我的（里面要放二级 router-view）----------
+      const Mine = {
+        template: `
+          <div>
+            <h2>我的</h2>
+            <div class="tabs">
+              <router-link to="/mine/info">个人信息</router-link>
+              <router-link to="/mine/orders">我的订单</router-link>
+            </div>
+            <!-- 二级路由出口：子路由组件渲染在这里 -->
+            <router-view></router-view>
+          </div>`,
+      };
+
+      const Home = {
+        template: `<div><h2>首页</h2><p>这里是首页，没有子路由。</p></div>`,
+      };
+
+      const routes = [
+        { path: "/home", component: Home },
+        {
+          path: "/mine",
+          component: Mine,
+          // 父路由重定向到默认子路由，也可以直接用 { path: '', redirect: 'info' }
+          redirect: "/mine/info",
+          children: [
+            // 子路由 path 不加 /，vue-router 会自动拼接成 /mine/info
+            { path: "info", component: MineInfo },
+            { path: "orders", component: MineOrders },
+          ],
+        },
+      ];
+
+      const router = new VueRouter({ routes });
+
+      new Vue({ el: "#app", router });
+    </script>
+  </body>
+</html>

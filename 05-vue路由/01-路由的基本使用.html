@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>01 - 路由的基本使用</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+      }
+      .nav {
+        display: flex;
+        gap: 10px;
+        border-bottom: 2px solid #e4e7ed;
+        padding-bottom: 12px;
+      }
+      /* router-link 渲染后就是 a 标签，直接给它写样式即可 */
+      .nav a {
+        padding: 8px 18px;
+        text-decoration: none;
+        color: #606266;
+        border-radius: 6px;
+        background: #fff;
+        border: 1px solid #dcdfe6;
+      }
+      /* 当前激活的路由，vue-router 会自动加上 router-link-active 类名 */
+      .nav a.router-link-active {
+        background: #409eff;
+        color: #fff;
+        border-color: #409eff;
+      }
+      .page {
+        margin-top: 20px;
+        padding: 24px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+        line-height: 1.8;
+      }
+      .tip {
+        color: #909399;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 准备容器 -->
+    <div id="app">
+      <!--
+        知识点 1：router-link
+        - 它是 vue-router 提供的全局组件，最终会被渲染成 <a> 标签
+        - to 属性写目标地址（不是 href），值可以是字符串或对象
+        - 处于当前路由时，会自动添加 router-link-active 类名（可用于高亮）
+      -->
+      <div class="nav">
+        <router-link to="/home">首页</router-link>
+        <router-link to="/about">关于我们</router-link>
+        <router-link to="/news">新闻</router-link>
+      </div>
+
+      <!--
+        知识点 2：router-view（路由出口）
+        - 匹配到的组件会在这里渲染出来
+        - 一个页面可以有多个 router-view（后面嵌套路由会用到）
+      -->
+      <router-view></router-view>
+
+      <p class="tip">提示：看地址栏，# 后面的内容会随着点击而变化。</p>
+    </div>
+
+    <!-- 引入 Vue 与 vue-router（注意顺序：先 Vue，后 vue-router） -->
+    <script src="../js/vue.js"></script>
+    <script src="../js/vue-router.js"></script>
+    <script>
+      // ========== 第 1 步：定义路由组件（每个"页面"就是一个组件）==========
+      const Home = {
+        template: `
+          <div class="page">
+            <h2>首页</h2>
+            <p>这里是首页内容。点击上方导航切换，页面不会刷新，只替换 router-view 区域。</p>
+          </div>`,
+      };
+
+      const About = {
+        template: `
+          <div class="page">
+            <h2>关于我们</h2>
+            <p>这是一个用 Vue 2 + vue-router 3 写的单页应用示例。</p>
+          </div>`,
+      };
+
+      const News = {
+        template: `
+          <div class="page">
+            <h2>新闻</h2>
+            <ul>
+              <li>Vue 3 已经全面普及，但 Vue 2 生态仍在大量项目中维护</li>
+              <li>路由是 SPA 的骨架</li>
+            </ul>
+          </div>`,
+      };
+
+      // ========== 第 2 步：定义路由规则表 ==========
+      // path 是路径，component 是该路径对应的组件
+      const routes = [
+        { path: "/home", component: Home },
+        { path: "/about", component: About },
+        { path: "/news", component: News },
+      ];
+
+      // ========== 第 3 步：创建路由实例 ==========
+      // hash 模式（默认）：地址形如 index.html#/home，直接双击打开就能用
+      const router = new VueRouter({
+        routes, // routes: routes 的简写
+      });
+
+      // ========== 第 4 步：把路由挂载到 Vue 根实例 ==========
+      new Vue({
+        el: "#app",
+        router, // 挂载后，组件内才能通过 this.$route / this.$router 使用
+      });
+
+      // 小结：
+      // 路由的工作流程 = 监听地址栏变化 -> 在 routes 表里匹配 path -> 找到 component -> 渲染到 router-view
+    </script>
+  </body>
+</html>
