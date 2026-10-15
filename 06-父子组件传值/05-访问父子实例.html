@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>05 - 访问父子实例</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #f56c6c;
+      }
+      .intro {
+        background: #fef0f0;
+        border-left: 4px solid #f56c6c;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      .child {
+        border: 2px dashed #f56c6c;
+        border-radius: 8px;
+        padding: 14px;
+        margin-top: 10px;
+        background: #fffafa;
+      }
+      .child-title {
+        font-size: 12px;
+        color: #f56c6c;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+      input {
+        padding: 6px 10px;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+        margin: 4px 6px 4px 0;
+      }
+      button {
+        padding: 6px 14px;
+        margin: 4px 6px 4px 0;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #f56c6c;
+        color: #f56c6c;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      .result {
+        color: #f56c6c;
+        font-weight: bold;
+      }
+      .log {
+        background: #1e1e1e;
+        color: #7ec699;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: Consolas, monospace;
+        max-height: 130px;
+        overflow: auto;
+      }
+      .warn {
+        background: #fdf6ec;
+        border-left: 4px solid #e6a23c;
+        padding: 10px 14px;
+        border-radius: 4px;
+        font-size: 13px;
+        color: #b88230;
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>访问父子实例：$refs 与 $parent</h1>
+      <div class="intro">
+        除了 props / $emit，还有一种"抄近路"的方式：直接拿到对方的组件实例，调用它的方法、访问它的数据。<br />
+        <b>但请把这一页当成"应急手段"。</b>能靠 props / $emit 解决的，就别用它们——
+        直接操作实例会让组件之间强耦合，以后改动一处到处崩。
+      </div>
+
+      <!-- ==================== 父访问子：$refs ==================== -->
+      <div class="box">
+        <h2>一、父访问子：this.$refs（相对推荐）</h2>
+        <p style="font-size:14px">
+          在子组件标签上写 <code>ref="名字"</code>，父组件就能用 <code>this.$refs.名字</code> 拿到子组件实例。
+        </p>
+
+        <button @click="resetChild">父组件调用子组件的 reset() 方法清空表单</button>
+        <button @click="readChildData">父组件读取子组件的数据</button>
+
+        <!-- 给子组件起一个 ref 名字，方便父组件查找 -->
+        <child-form ref="formRef"></child-form>
+
+        <div class="warn">
+          <b>两个注意点：</b><br />
+          1. <code>$refs</code> 要在 <b>mounted 之后</b>才能拿到，created 阶段还是空的（因为 DOM 还没渲染）。<br />
+          2. <code>$refs</code> <b>不是响应式</b>的，别把它用在模板里期待自动更新，它适合"临时取一次就调用方法"。
+        </div>
+      </div>
+
+      <!-- ==================== 子访问父：$parent ==================== -->
+      <div class="box">
+        <h2>二、子访问父：this.$parent（不建议用）</h2>
+        <p style="font-size:14px">
+          子组件里用 <code>this.$parent</code> 能拿到父组件实例，进而访问父的数据和方法。
+        </p>
+        <parent-info :parent-name="parentName"></parent-info>
+
+        <div class="warn">
+          为什么不建议：<code>$parent</code> 让子组件"默认知道父组件长什么样"，
+          一旦这个子组件放到别的父组件下面用，代码立刻报错。<br />
+          它也更难调试——你看子组件代码时，根本不知道数据是谁、什么时候改的。<br />
+          <b>正确姿势仍然是：子组件 $emit 事件，让父组件自己去改数据。</b>
+        </div>
+      </div>
+
+      <!-- ==================== 操作日志 ==================== -->
+      <div class="box">
+        <h2>操作日志</h2>
+        <div class="log">
+          <div v-for="(l, i) in logs" :key="i">{{ l }}</div>
+          <div v-if="!logs.length" style="color:#666">（暂无操作）</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script>
+      // ========== 子组件：被父组件通过 $refs 调用 ==========
+      Vue.component("child-form", {
+        data() {
+          return {
+            form: {
+              name: "",
+              phone: "",
+            },
+            // 给父组件看的一个内部状态
+            submitCount: 0,
+          };
+        },
+        template: `
+          <div class="child">
+            <div class="child-title">子组件 child-form（ref="formRef"）</div>
+            <p>
+              姓名：<input v-model="form.name" placeholder="请输入姓名" />
+            </p>
+            <p>
+              手机：<input v-model="form.phone" placeholder="请输入手机号" />
+            </p>
+            <p style="font-size:13px;color:#909399">
+              我内部的 submitCount = {{ submitCount }}（父组件可以通过 $refs 读到）
+            </p>
+          </div>`,
+        methods: {
+          // 这个方法专门"暴露"给父组件调用
+          reset() {
+            this.form.name = "";
+            this.form.phone = "";
+            this.submitCount++;
+          },
+        },
+      });
+
+      // ========== 子组件：演示 $parent ==========
+      Vue.component("parent-info", {
+        props: ["parentName"],
+        template: `
+          <div class="child">
+            <div class="child-title">子组件 parent-info</div>
+            <p>我通过 props 正常拿到的值：<b>{{ parentName }}</b></p>
+            <button @click="askParent">通过 $parent 直接读父组件数据（不推荐）</button>
+          </div>`,
+        methods: {
+          askParent() {
+            // 直接访问父组件实例
+            const parent = this.$parent;
+            alert(
+              "我用 $parent 读到了父组件的数据：\n" +
+                "parentName = " + parent.parentName + "\n\n" +
+                "（这只是演示，实际项目请改用 $emit 通知父组件）",
+            );
+            parent.logs.unshift(
+              "[" + new Date().toLocaleTimeString() + "] 子组件通过 $parent 读取了父组件数据",
+            );
+          },
+        },
+      });
+
+      new Vue({
+        el: "#app",
+        data: {
+          parentName: "我是父组件的数据",
+          logs: [],
+        },
+        methods: {
+          // 父组件通过 $refs 调用子组件的方法
+          resetChild() {
+            // 注意：$refs.formRef 就是子组件实例，可以直接调它的方法
+            this.$refs.formRef.reset();
+            this.logs.unshift(
+              "[" + new Date().toLocaleTimeString() + "] 父组件调用 $refs.formRef.reset() 成功",
+            );
+          },
+          readChildData() {
+            const child = this.$refs.formRef;
+            this.logs.unshift(
+              "[" +
+                new Date().toLocaleTimeString() +
+                "] 读取子组件数据：name='" +
+                child.form.name +
+                "'，phone='" +
+                child.form.phone +
+                "'，submitCount=" +
+                child.submitCount,
+            );
+            alert(
+              "子组件当前数据：\nname = " + (child.form.name || "(空)") +
+                "\nphone = " + (child.form.phone || "(空)") +
+                "\nsubmitCount = " + child.submitCount,
+            );
+          },
+        },
+        mounted() {
+          // 验证一下：mounted 时 $refs 已经可以拿到了
+          console.log("mounted 里的 $refs.formRef =", this.$refs.formRef);
+        },
+        created() {
+          // created 阶段 DOM 还没渲染，这里是 undefined
+          console.log("created 里的 $refs.formRef =", this.$refs.formRef);
+        },
+      });
+    </script>
+  </body>
+</html>

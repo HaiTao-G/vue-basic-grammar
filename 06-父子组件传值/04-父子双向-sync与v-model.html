@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>04 - 父子双向 sync 与 v-model</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #9c27b0;
+      }
+      .intro {
+        background: #f8f0fb;
+        border-left: 4px solid #9c27b0;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      .child {
+        border: 2px dashed #9c27b0;
+        border-radius: 8px;
+        padding: 14px;
+        margin-top: 10px;
+        background: #fcf7fe;
+      }
+      .child-title {
+        font-size: 12px;
+        color: #9c27b0;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+      input {
+        padding: 6px 10px;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+        margin: 4px 6px 4px 0;
+      }
+      button {
+        padding: 6px 14px;
+        margin: 4px 6px 4px 0;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #9c27b0;
+        color: #9c27b0;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      .result {
+        color: #9c27b0;
+        font-weight: bold;
+      }
+      pre {
+        background: #1e1e1e;
+        color: #dcdcdc;
+        padding: 12px 14px;
+        border-radius: 6px;
+        overflow: auto;
+        font-size: 13px;
+        line-height: 1.6;
+        margin: 8px 0;
+      }
+      pre .c {
+        color: #888;
+      }
+      .eq {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .eq > div {
+        flex: 1;
+        min-width: 240px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>父子"双向"：.sync 与 v-model</h1>
+      <div class="intro">
+        前面讲的是：父传子用 props，子传父用 $emit。这样一来"子组件想改父组件的值"要写两段代码。<br />
+        Vue 提供了两个<b>语法糖</b>把这两步合成一步写：<code>.sync</code> 和组件上的 <code>v-model</code>。<br />
+        <b>注意：本质没变，底层依然是 props + $emit，"单向数据流"这条底线没有被打破。</b>
+      </div>
+
+      <!-- ==================== .sync ==================== -->
+      <div class="box">
+        <h2>一、.sync 修饰符</h2>
+        <p>
+          父组件里的 title = <span class="result">{{ title }}</span>
+        </p>
+
+        <!--
+          :title.sync="title" 是下面这段的简写：
+            :title="title" @update:title="title = $event"
+          也就是说：子组件只要 emit('update:title', 新值)，父组件就会自动把 title 更新掉。
+        -->
+        <my-panel :title.sync="title"></my-panel>
+
+        <div class="eq" style="margin-top:14px">
+          <div>
+            <p style="font-size:13px;color:#909399">简写（推荐）：</p>
+            <pre>&lt;my-panel <span style="color:#7ec699">:title.sync</span>="title"&gt;&lt;/my-panel&gt;</pre>
+          </div>
+          <div>
+            <p style="font-size:13px;color:#909399">完整写法（等价）：</p>
+            <pre>&lt;my-panel :title="title"
+          @update:title="title = $event"&gt;&lt;/my-panel&gt;</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== v-model ==================== -->
+      <div class="box">
+        <h2>二、组件上的 v-model</h2>
+        <p>
+          父组件里的 text = <span class="result">{{ text }}</span>
+        </p>
+
+        <!--
+          给"自定义组件"用 v-model，等价于：
+            :value="text" @input="text = $event"
+          所以子组件必须：props 里声明 value，并且用 $emit('input', 新值) 抛出去。
+        -->
+        <my-input v-model="text"></my-input>
+
+        <div class="eq" style="margin-top:14px">
+          <div>
+            <p style="font-size:13px;color:#909399">简写：</p>
+            <pre>&lt;my-input <span style="color:#7ec699">v-model</span>="text"&gt;&lt;/my-input&gt;</pre>
+          </div>
+          <div>
+            <p style="font-size:13px;color:#909399">完整写法（等价）：</p>
+            <pre>&lt;my-input :value="text"
+          @input="text = $event"&gt;&lt;/my-input&gt;</pre>
+          </div>
+        </div>
+
+        <p style="font-size:13px;color:#909399;margin-top:10px">
+          下面这个是上面"完整写法"的真实效果，输入看看是否同样能同步：
+        </p>
+        <my-input :value="text" @input="text = $event"></my-input>
+      </div>
+
+      <!-- ==================== 对比 ==================== -->
+      <div class="box">
+        <h2>三、两个语法糖对比</h2>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+          <tr style="background: #fafafa">
+            <th style="border: 1px solid #ebeef5; padding: 8px; text-align: left">语法糖</th>
+            <th style="border: 1px solid #ebeef5; padding: 8px; text-align: left">本质是</th>
+            <th style="border: 1px solid #ebeef5; padding: 8px; text-align: left">子组件要做什么</th>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ebeef5; padding: 8px"><code>:x.sync="val"</code></td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">
+              <code>:x="val" @update:x="val = $event"</code>
+            </td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">
+              <code>$emit('update:x', 新值)</code>
+            </td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ebeef5; padding: 8px"><code>v-model="val"</code></td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">
+              <code>:value="val" @input="val = $event"</code>
+            </td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">
+              props 声明 <code>value</code>，然后 <code>$emit('input', 新值)</code>
+            </td>
+          </tr>
+        </table>
+        <p style="font-size: 13px; color: #909399; margin-top: 12px">
+          记忆点：<b>.sync 靠 <code>update:xxx</code> 事件</b>，<b>v-model 靠 <code>input</code> 事件 + <code>value</code> prop</b>。
+          Vue 3 里 v-model 的约定改成了 <code>modelValue</code> / <code>update:modelValue</code>，本项目是 Vue 2，按上面的写。
+        </p>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script>
+      // ========== 子组件：配合 .sync 使用 ==========
+      Vue.component("my-panel", {
+        // 接收父组件传来的 title
+        props: ["title"],
+        template: `
+          <div class="child">
+            <div class="child-title">子组件 my-panel</div>
+            <p>我收到的 title：<b>{{ title }}</b></p>
+            <button @click="changeTitle">子组件改标题（emit update:title）</button>
+          </div>`,
+        methods: {
+          changeTitle() {
+            // .sync 的约定：事件名必须是 update:属性名
+            this.$emit("update:title", "子组件改的标题 " + new Date().toLocaleTimeString());
+          },
+        },
+      });
+
+      // ========== 子组件：配合 v-model 使用 ==========
+      Vue.component("my-input", {
+        // v-model 的约定：props 名字必须是 value
+        props: ["value"],
+        template: `
+          <div class="child">
+            <div class="child-title">子组件 my-input</div>
+            <input
+              :value="value"
+              @input="$emit('input', $event.target.value)"
+              placeholder="在这里输入，父组件的 text 会同步变化"
+            />
+          </div>`,
+      });
+
+      // ========== 父组件 ==========
+      new Vue({
+        el: "#app",
+        data: {
+          title: "初始标题",
+          text: "",
+        },
+      });
+    </script>
+  </body>
+</html>

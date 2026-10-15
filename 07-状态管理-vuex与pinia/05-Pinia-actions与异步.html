@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>05 - Pinia actions 与异步</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #b8860b;
+      }
+      .intro {
+        background: #fffbeb;
+        border-left: 4px solid #e6a23c;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      button {
+        padding: 6px 14px;
+        margin: 4px 8px 4px 0;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        border-color: #e6a23c;
+        color: #e6a23c;
+      }
+      button.active {
+        background: #e6a23c;
+        color: #fff;
+        border-color: #e6a23c;
+      }
+      input {
+        padding: 6px 10px;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+        margin-right: 8px;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      pre {
+        background: #1e1e1e;
+        color: #dcdcdc;
+        padding: 14px;
+        border-radius: 6px;
+        overflow: auto;
+        font-size: 13px;
+        line-height: 1.7;
+        margin: 8px 0;
+      }
+      pre .c {
+        color: #888;
+      }
+      pre .k {
+        color: #7ec699;
+      }
+      .todo-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px dashed #ebeef5;
+      }
+      .todo-item.done span {
+        text-decoration: line-through;
+        color: #c0c4cc;
+      }
+      .todo-item span {
+        flex: 1;
+      }
+      .empty {
+        color: #c0c4cc;
+        text-align: center;
+        padding: 16px 0;
+      }
+      .loading {
+        color: #e6a23c;
+        font-size: 13px;
+        margin-left: 8px;
+      }
+      .log {
+        background: #1e1e1e;
+        color: #7ec699;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 12.5px;
+        font-family: Consolas, monospace;
+        max-height: 150px;
+        overflow: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid #ebeef5;
+        padding: 8px 10px;
+        text-align: left;
+      }
+      th {
+        background: #fafafa;
+      }
+      .stat {
+        font-size: 14px;
+        color: #606266;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Pinia：actions 与异步</h1>
+      <div class="intro">
+        Pinia 最大的简化就在这里：<b>改 state 直接写在 actions 里，没有 mutation 这一层。</b><br />
+        同步、异步都写在 actions 中，想怎么改就怎么改。本页用一个待办清单把这些都过一遍。
+      </div>
+
+      <!-- ============ 待办清单 ============ -->
+      <div class="box">
+        <h2>待办清单（state + getters + actions 全用上）</h2>
+
+        <p>
+          <input v-model="draft" placeholder="输入待办内容，回车添加" @keyup.enter="handleAdd" />
+          <button @click="handleAdd">添加</button>
+          <button @click="loadFromServer">
+            模拟异步加载{{ todo.loading ? "（加载中）" : "" }}
+          </button>
+          <span class="loading" v-if="todo.loading">⏳ 正在请求服务器...</span>
+        </p>
+
+        <p>
+          筛选：
+          <button :class="{ active: todo.filter === 'all' }" @click="todo.changeFilter('all')">
+            全部
+          </button>
+          <button :class="{ active: todo.filter === 'undone' }" @click="todo.changeFilter('undone')">
+            未完成
+          </button>
+          <button :class="{ active: todo.filter === 'done' }" @click="todo.changeFilter('done')">
+            已完成
+          </button>
+        </p>
+
+        <div v-if="!todo.filteredList.length" class="empty">（这里还没有内容）</div>
+
+        <div v-for="(item, index) in todo.filteredList" :key="index" class="todo-item" :class="{ done: item.done }">
+          <input type="checkbox" :checked="item.done" @change="toggle(item)" />
+          <span>{{ item.text }}</span>
+          <button @click="todo.remove(item)">删除</button>
+        </div>
+
+        <p class="stat" style="margin-top:14px">
+          共 {{ todo.list.length }} 条 ｜ 已完成 {{ todo.doneCount }} 条 ｜ 当前筛选：{{ todo.filter }}
+        </p>
+
+        <p style="margin-top:10px">
+          <button @click="markAllDone">$patch 批量全部标记完成</button>
+          <button @click="todo.$reset()">$reset 重置整个 store</button>
+        </p>
+      </div>
+
+      <!-- ============ 代码说明 ============ -->
+      <div class="box">
+        <h2>关键代码</h2>
+
+        <p style="font-size:14px"><b>1. actions 里直接改（对比 Vuex 要 commit）</b></p>
+        <pre>actions: {
+  add(text) {
+    <span class="k">this.list.push</span>({ text, done: false })   <span class="c">// 直接改，没有 mutation</span>
+  },
+  toggle(item) {
+    item.done = !item.done
+  }
+}</pre>
+
+        <p style="font-size:14px;margin-top:16px"><b>2. 异步 action：async/await 直接用</b></p>
+        <pre><span class="k">async</span> loadFromServer() {
+  this.loading = true
+  <span class="c">// 真实项目：const res = await axios.get('/api/todos')</span>
+  <span class="k">await</span> new Promise(r =&gt; setTimeout(r, 1000))
+  this.list = [ ... ]
+  this.loading = false
+}
+
+<span class="c">// 组件里调用，返回的是 Promise，可以 await 或 .then</span>
+await todo.loadFromServer()</pre>
+
+        <p style="font-size:14px;margin-top:16px"><b>3. 三个好用的自带方法</b></p>
+        <table>
+          <tr>
+            <th>方法</th>
+            <th>作用</th>
+            <th>示例</th>
+          </tr>
+          <tr>
+            <td><code>$patch</code></td>
+            <td>一次修改多个数据（只触发一次更新）</td>
+            <td><code>store.$patch({ a: 1, b: 2 })</code> 或传函数</td>
+          </tr>
+          <tr>
+            <td><code>$reset</code></td>
+            <td>把 state 恢复到初始值</td>
+            <td><code>store.$reset()</code></td>
+          </tr>
+          <tr>
+            <td><code>$subscribe</code></td>
+            <td>订阅 state 变化（做日志、自动保存草稿）</td>
+            <td><code>store.$subscribe((m, state) =&gt; {})</code></td>
+          </tr>
+        </table>
+        <pre style="margin-top:10px"><span class="c">// $patch 的两种用法</span>
+store.<span class="k">$patch</span>({ filter: 'done', loading: false })        <span class="c">// 传对象</span>
+store.<span class="k">$patch</span>((state) =&gt; { state.list.forEach(t =&gt; t.done = true) }) <span class="c">// 传函数（推荐）</span></pre>
+        <p style="font-size:13px;color:#909399">
+          注意：<code>$reset</code> 只对"选项式"定义的 store 有效；用 setup 函数式定义的 store 没有这个方法，
+          需要自己写一个重置的 action。
+        </p>
+      </div>
+
+      <!-- ============ 订阅日志 ============ -->
+      <div class="box">
+        <h2>$subscribe 实时日志（state 每变一次就记一条）</h2>
+        <div class="log">
+          <div v-for="(l, i) in logs" :key="i">{{ l }}</div>
+          <div v-if="!logs.length" style="color:#666">（暂无变化）</div>
+        </div>
+        <p style="font-size:13px;color:#909399">
+          这个能力很适合做"自动保存草稿"：只要 store 变了，就把数据存到 localStorage。
+        </p>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script src="../js/vue-demi.js"></script>
+    <script src="../js/pinia.js"></script>
+    <script>
+      Vue.use(Pinia.PiniaVuePlugin);
+      const pinia = Pinia.createPinia();
+
+      // ============================================================
+      // 定义待办 store（选项式）
+      // ============================================================
+      const useTodoStore = Pinia.defineStore("todo", {
+        state: () => ({
+          list: [
+            { text: "学习 Vuex", done: true },
+            { text: "学习 Pinia", done: false },
+          ],
+          filter: "all", // all / undone / done
+          loading: false,
+        }),
+
+        getters: {
+          doneCount: (state) => state.list.filter((t) => t.done).length,
+
+          // getters 里也可以"读别的 getter"：用 this（不能用箭头函数）
+          filteredList() {
+            if (this.filter === "done") return this.list.filter((t) => t.done);
+            if (this.filter === "undone") return this.list.filter((t) => !t.done);
+            return this.list;
+          },
+        },
+
+        actions: {
+          // 同步 action：直接改 state
+          add(text) {
+            if (!text.trim()) return;
+            this.list.push({ text: text.trim(), done: false });
+          },
+
+          remove(item) {
+            const index = this.list.indexOf(item);
+            if (index > -1) this.list.splice(index, 1);
+          },
+
+          toggle(item) {
+            item.done = !item.done;
+          },
+
+          changeFilter(f) {
+            this.filter = f;
+          },
+
+          // 异步 action：async / await 直接用，无需额外绕一层
+          async loadFromServer() {
+            this.loading = true;
+            // 模拟网络请求耗时
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            this.list = [
+              { text: "从服务器加载的待办 A", done: false },
+              { text: "从服务器加载的待办 B", done: true },
+              { text: "从服务器加载的待办 C", done: false },
+            ];
+            this.loading = false;
+          },
+        },
+      });
+
+      new Vue({
+        el: "#app",
+        pinia,
+        // 全部逻辑写在 setup 里，演示 Pinia 与 Vue 2.7 Composition API 的配合
+        setup() {
+          const todo = useTodoStore();
+
+          // Vue 2.7 内置的 ref：用于输入框和日志
+          // setup 里 return 出去的 ref，模板中会自动解包，v-model 也能正常双向绑定
+          const draft = Vue.ref("");
+          const logs = Vue.ref([]);
+
+          function record(msg) {
+            logs.value.unshift("[" + new Date().toLocaleTimeString() + "] " + msg);
+            if (logs.value.length > 30) logs.value.pop();
+          }
+
+          // $subscribe：订阅 state 变化，store 每变一次就会触发
+          todo.$subscribe((mutation, state) => {
+            record("store 发生变化（type = " + mutation.type + "）");
+          });
+
+          function handleAdd() {
+            if (!draft.value.trim()) {
+              return alert("请输入内容");
+            }
+            todo.add(draft.value);
+            record("添加了一条待办：" + draft.value.trim());
+            draft.value = "";
+          }
+
+          function toggle(item) {
+            todo.toggle(item);
+            record("切换完成状态：" + item.text);
+          }
+
+          function markAllDone() {
+            // $patch 传函数：一次修改多条数据，只触发一次更新
+            todo.$patch((state) => {
+              state.list.forEach((t) => (t.done = true));
+              state.filter = "done";
+            });
+            record("$patch 批量标记全部完成");
+          }
+
+          async function loadFromServer() {
+            record("发起异步请求（等待 1 秒）...");
+            await todo.loadFromServer();
+            record("异步请求结束，列表已更新");
+          }
+
+          // 注意：都要 return 出去，模板里才能用
+          return { todo, draft, logs, record, handleAdd, toggle, markAllDone, loadFromServer };
+        },
+      });
+    </script>
+  </body>
+</html>

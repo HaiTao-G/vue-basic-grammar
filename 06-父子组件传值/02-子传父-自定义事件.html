@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>02 - 子传父 自定义事件</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #67c23a;
+      }
+      .intro {
+        background: #f0f9eb;
+        border-left: 4px solid #67c23a;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      .child {
+        border: 2px dashed #67c23a;
+        border-radius: 8px;
+        padding: 14px;
+        margin-top: 10px;
+        background: #f6fdf6;
+      }
+      .child-title {
+        font-size: 12px;
+        color: #67c23a;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+      input {
+        padding: 6px 10px;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+        margin: 4px 6px 4px 0;
+      }
+      button {
+        padding: 6px 14px;
+        margin: 4px 6px 4px 0;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #67c23a;
+        color: #67c23a;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      .result {
+        color: #67c23a;
+        font-weight: bold;
+      }
+      ul {
+        margin: 8px 0;
+        padding-left: 22px;
+      }
+      .flow {
+        font-family: Consolas, monospace;
+        font-size: 13px;
+        background: #f8f9fb;
+        border-radius: 6px;
+        padding: 10px 14px;
+        color: #606266;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>子传父：$emit 自定义事件</h1>
+      <div class="intro">
+        <b>场景：</b>子组件里点了个按钮，需要让父组件的数据发生变化。<br />
+        <b>为什么不能直接改：</b>props 是只读的，子组件不能碰父组件的数据。<br />
+        <b>办法：</b>子组件用 <code>this.$emit('事件名', 要传的数据)</code> "喊一声"，
+        父组件用 <code>@事件名="处理函数"</code> 接住。<br />
+        <b>口诀：</b>事件向上抛。
+      </div>
+
+      <!-- ==================== 例 1：不带参数 ==================== -->
+      <div class="box">
+        <h2>例 1：子组件点按钮 → 父组件改数据（不带参数）</h2>
+        <p>
+          父组件里的计数器 total = <span class="result">{{ total }}</span>
+        </p>
+
+        <!--
+          父组件监听子组件抛上来的自定义事件：
+            @add   → 收到 add 事件就执行
+            @reset → 收到 reset 事件就执行
+          这里的 total += 1 是内联语句写法，事件不带参数时很方便。
+        -->
+        <my-counter @add="total += 1" @reset="total = 0"></my-counter>
+
+        <div class="flow">
+          数据流：子组件 $emit('add') &nbsp;➜&nbsp; 父组件 @add="total += 1" &nbsp;➜&nbsp; total 变化 &nbsp;➜&nbsp;
+          页面更新
+        </div>
+      </div>
+
+      <!-- ==================== 例 2：带参数 ==================== -->
+      <div class="box">
+        <h2>例 2：子组件把输入内容交给父组件（带参数）</h2>
+
+        <add-comment @submit="addComment"></add-comment>
+
+        <p style="margin-top:14px">父组件收到的留言列表：</p>
+        <ul>
+          <li v-for="(item, index) in comments" :key="index">{{ item }}</li>
+        </ul>
+        <p v-if="!comments.length" style="color:#c0c4cc;font-size:14px">
+          （还没有留言，在上面的子组件里输入并提交试试）
+        </p>
+
+        <div class="flow">
+          数据流：子组件 $emit('submit', 输入内容) &nbsp;➜&nbsp; 父组件 @submit="addComment" &nbsp;➜&nbsp;
+          addComment(内容) 把它推进数组
+        </div>
+      </div>
+
+      <!-- ==================== 说明 ==================== -->
+      <div class="box">
+        <h2>要点小结</h2>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+          <tr style="background: #fafafa">
+            <th style="border: 1px solid #ebeef5; padding: 8px; text-align: left">环节</th>
+            <th style="border: 1px solid #ebeef5; padding: 8px; text-align: left">写在谁身上</th>
+            <th style="border: 1px solid #ebeef5; padding: 8px; text-align: left">代码</th>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ebeef5; padding: 8px">抛事件</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">子组件</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">
+              <code>this.$emit('submit', 数据)</code>
+            </td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ebeef5; padding: 8px">接事件</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">父组件</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">
+              <code>&lt;add-comment @submit="addComment"&gt;</code>
+            </td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ebeef5; padding: 8px">改数据</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">父组件</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">
+              <code>addComment(val) { this.comments.push(val) }</code>
+            </td>
+          </tr>
+        </table>
+        <p style="font-size: 13px; color: #909399; margin-top: 12px">
+          提醒：事件名建议用连字符（<code>add-item</code>），父组件用 <code>@add-item</code> 监听；
+          因为是自定义事件，名字随便起，但两边必须<b>完全一致</b>。
+        </p>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script>
+      // ========== 子组件 1：计数器 ==========
+      // 它自己不保存计数，只负责"把用户的操作喊给父组件听"
+      Vue.component("my-counter", {
+        template: `
+          <div class="child">
+            <div class="child-title">子组件 my-counter（无自己的数据，只发事件）</div>
+            <button @click="$emit('add')">+1（抛出 add 事件）</button>
+            <button @click="$emit('reset')">归零（抛出 reset 事件）</button>
+          </div>`,
+      });
+
+      // ========== 子组件 2：留言输入框 ==========
+      Vue.component("add-comment", {
+        data() {
+          return {
+            // 子组件自己管理"输入框里的临时文字"
+            draft: "",
+          };
+        },
+        template: `
+          <div class="child">
+            <div class="child-title">子组件 add-comment</div>
+            <input v-model="draft" placeholder="输入留言内容" @keydown.enter="submit" />
+            <button @click="submit">提交（$emit 给父组件）</button>
+          </div>`,
+        methods: {
+          submit() {
+            // 空内容不提交
+            if (!this.draft.trim()) {
+              return alert("请先输入内容");
+            }
+            // 关键：把数据"抛"给父组件
+            // 第一个参数是事件名，后面的参数会作为父组件处理函数的参数
+            this.$emit("submit", this.draft);
+            // 抛完事件后，清空自己的输入框（管好自己的一亩三分地）
+            this.draft = "";
+          },
+        },
+      });
+
+      // ========== 父组件 ==========
+      new Vue({
+        el: "#app",
+        data: {
+          total: 0,
+          comments: [],
+        },
+        methods: {
+          // 接收子组件抛上来的数据
+          addComment(content) {
+            this.comments.push(content);
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

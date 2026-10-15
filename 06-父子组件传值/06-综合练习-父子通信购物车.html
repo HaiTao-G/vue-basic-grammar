@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>06 - 综合练习：父子通信购物车</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      .intro {
+        background: #ecf5ff;
+        border-left: 4px solid #409eff;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .layout {
+        display: flex;
+        gap: 18px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .col {
+        flex: 1;
+        min-width: 320px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin-bottom: 14px;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #409eff;
+      }
+      .child {
+        border: 2px dashed #409eff;
+        border-radius: 8px;
+        padding: 14px;
+        background: #fafcff;
+        margin-bottom: 10px;
+      }
+      .child.cart {
+        border-color: #e6a23c;
+        background: #fffcf7;
+      }
+      .child-title {
+        font-size: 12px;
+        color: #409eff;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+      .child.cart .child-title {
+        color: #e6a23c;
+      }
+      .item-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px dashed #ebeef5;
+      }
+      .item-row:last-child {
+        border-bottom: none;
+      }
+      .item-name {
+        font-weight: bold;
+      }
+      .price {
+        color: #f56c6c;
+        font-weight: bold;
+      }
+      button {
+        padding: 5px 12px;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      button:hover {
+        border-color: #409eff;
+        color: #409eff;
+      }
+      button.mini {
+        padding: 2px 8px;
+        font-size: 12px;
+      }
+      button.danger:hover {
+        border-color: #f56c6c;
+        color: #f56c6c;
+      }
+      .total {
+        font-size: 15px;
+        padding-top: 10px;
+        border-top: 2px solid #ebeef5;
+        margin-top: 10px;
+      }
+      .total b {
+        color: #f56c6c;
+        font-size: 18px;
+      }
+      .empty {
+        color: #c0c4cc;
+        font-size: 14px;
+        padding: 16px 0;
+        text-align: center;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      .flow {
+        font-family: Consolas, monospace;
+        font-size: 12.5px;
+        color: #606266;
+        background: #f8f9fb;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-top: 10px;
+      }
+      .count-badge {
+        display: inline-block;
+        background: #f56c6c;
+        color: #fff;
+        font-size: 12px;
+        border-radius: 10px;
+        padding: 0 8px;
+        margin-left: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>综合练习：父子通信购物车</h1>
+      <div class="intro">
+        <b>设计原则：</b>数据放在"共同祖先"里（这里是父组件），子组件只负责展示和"报告用户操作"。<br />
+        <b>通信路径：</b>商品列表子组件 --（add-to-cart 事件）--&gt; 父组件改数据 --（props）--&gt;
+        购物车子组件重新渲染。
+      </div>
+
+      <div class="layout">
+        <!-- ==================== 左侧：商品列表 ==================== -->
+        <div class="col">
+          <div class="box">
+            <h2>商品列表 <span class="count-badge">共 {{ products.length }} 件</span></h2>
+
+            <!--
+              product-item 子组件：
+                接收 props: item（商品数据）
+                向上抛事件：add-to-cart（用户点击"加入购物车"）
+              父组件在这里监听 @add-to-cart="addToCart"
+            -->
+            <product-item
+              v-for="p in products"
+              :key="p.id"
+              :item="p"
+              @add-to-cart="addToCart"
+            ></product-item>
+
+            <div class="flow">
+              子组件内部：this.$emit('add-to-cart', this.item)
+              <br />
+              父组件监听：&lt;product-item @add-to-cart="addToCart"&gt;
+            </div>
+          </div>
+
+          <div class="box">
+            <h2>当前数据在父组件里</h2>
+            <p style="font-size:14px;margin:4px 0">products（商品）= {{ products.length }} 条</p>
+            <p style="font-size:14px;margin:4px 0">
+              cart（购物车）= {{ cart.length }} 种商品，共 {{ totalCount }} 件
+            </p>
+            <p style="font-size:13px;color:#909399">
+              打开 Vue Devtools 或控制台可以看到：子组件里<b>没有</b>商品和购物车数据，
+              它们全在父组件里，子组件只拿到"自己要显示的那一部分"。
+            </p>
+          </div>
+        </div>
+
+        <!-- ==================== 右侧：购物车 ==================== -->
+        <div class="col">
+          <div class="box">
+            <h2>购物车</h2>
+
+            <!--
+              cart-panel 子组件：
+                接收 props: items（购物车列表）
+                向上抛事件：remove（删除某一项）、change-count（增减数量）、clear（清空）
+            -->
+            <cart-panel
+              :items="cart"
+              @remove="removeItem"
+              @change-count="changeCount"
+              @clear="clearCart"
+            ></cart-panel>
+
+            <div class="flow">
+              子组件内部：this.$emit('remove', index) / this.$emit('change-count', index, delta)
+              <br />
+              父组件监听并修改自己的 cart 数组
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 知识点回顾 ==================== -->
+      <div class="box">
+        <h2>本页用到的父子通信方式回顾</h2>
+        <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+          <tr style="background: #fafafa">
+            <th style="border: 1px solid #ebeef5; padding: 8px; text-align: left">通信</th>
+            <th style="border: 1px solid #ebeef5; padding: 8px; text-align: left">方式</th>
+            <th style="border: 1px solid #ebeef5; padding: 8px; text-align: left">代码位置</th>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ebeef5; padding: 8px">父 → 子</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">props 传数据</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">
+              <code>:item="p"</code> / <code>:items="cart"</code>
+            </td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ebeef5; padding: 8px">子 → 父</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">$emit 抛事件</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">
+              <code>$emit('add-to-cart', item)</code>
+            </td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ebeef5; padding: 8px">谁改数据</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">永远是父组件改</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">
+              <code>addToCart() / removeItem() / changeCount() / clearCart()</code>
+            </td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ebeef5; padding: 8px">派生计算</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">父组件用 computed</td>
+            <td style="border: 1px solid #ebeef5; padding: 8px">
+              <code>totalCount</code> / <code>totalPrice</code>
+            </td>
+          </tr>
+        </table>
+        <p style="font-size:13px;color:#909399;margin-top:12px">
+          延伸思考：如果以后商品列表和购物车是两个"平级"的兄弟组件，
+          而数据要共享，怎么办？—— 一般把数据提到它们共同的父组件里（就是本页的做法）；
+          项目更大时，再考虑 Vuex / 事件总线。
+        </p>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script>
+      // ==================== 子组件 1：单个商品 ====================
+      Vue.component("product-item", {
+        // 接收父组件传来的单个商品对象
+        props: {
+          item: { type: Object, required: true },
+        },
+        template: `
+          <div class="child">
+            <div class="child-title">子组件 product-item</div>
+            <div class="item-row">
+              <div>
+                <div class="item-name">{{ item.name }}</div>
+                <div style="font-size:12px;color:#909399">库存 {{ item.stock }} 件</div>
+              </div>
+              <div style="text-align:right">
+                <div class="price">¥{{ item.price }}</div>
+                <button @click="add">加入购物车</button>
+              </div>
+            </div>
+          </div>`,
+        methods: {
+          add() {
+            // 子组件不直接改购物车，只把"用户想加这件商品"告诉父组件
+            this.$emit("add-to-cart", this.item);
+          },
+        },
+      });
+
+      // ==================== 子组件 2：购物车面板 ====================
+      Vue.component("cart-panel", {
+        props: {
+          items: { type: Array, default: () => [] },
+        },
+        computed: {
+          // 子组件也可以有自己的计算属性，仅用于显示
+          totalPrice() {
+            return this.items.reduce((sum, i) => sum + i.price * i.count, 0);
+          },
+        },
+        template: `
+          <div class="child cart">
+            <div class="child-title">子组件 cart-panel</div>
+
+            <div v-if="!items.length" class="empty">
+              购物车还是空的，去左边点"加入购物车"吧
+            </div>
+
+            <div v-for="(item, index) in items" :key="item.id" class="item-row">
+              <div>
+                <div class="item-name">{{ item.name }}</div>
+                <div style="font-size:12px;color:#909399">¥{{ item.price }} × {{ item.count }}</div>
+              </div>
+              <div>
+                <button class="mini" @click="changeCount(index, -1)">-</button>
+                <button class="mini" @click="changeCount(index, 1)">+</button>
+                <button class="mini danger" @click="remove(index)">删除</button>
+              </div>
+            </div>
+
+            <div v-if="items.length" class="total">
+              合计：<b>¥{{ totalPrice }}</b>
+              <button class="mini danger" style="float:right;margin-top:4px" @click="$emit('clear')">
+                清空购物车
+              </button>
+            </div>
+          </div>`,
+        methods: {
+          remove(index) {
+            // 只报告"要删第几项"，由父组件去删
+            this.$emit("remove", index);
+          },
+          changeCount(index, delta) {
+            // 可以一次抛多个参数：父组件的处理函数就按顺序接收
+            this.$emit("change-count", index, delta);
+          },
+        },
+      });
+
+      // ==================== 父组件：数据的主人 ====================
+      new Vue({
+        el: "#app",
+        data: {
+          products: [
+            { id: 1, name: "机械键盘 K8", price: 599, stock: 300 },
+            { id: 2, name: "无线鼠标 M3", price: 129, stock: 500 },
+            { id: 3, name: "27 寸显示器", price: 1299, stock: 60 },
+            { id: 4, name: "人体工学椅", price: 899, stock: 25 },
+          ],
+          // 购物车：{ id, name, price, count }
+          cart: [],
+        },
+        computed: {
+          // 所有商品件数之和
+          totalCount() {
+            return this.cart.reduce((sum, i) => sum + i.count, 0);
+          },
+          // 总价（这里只用于展示在父组件区域）
+          totalPrice() {
+            return this.cart.reduce((sum, i) => sum + i.price * i.count, 0);
+          },
+        },
+        methods: {
+          // 处理子组件抛上来的"加入购物车"
+          addToCart(product) {
+            const found = this.cart.find((i) => i.id === product.id);
+            if (found) {
+              // 已经加过，数量 +1
+              found.count++;
+            } else {
+              // 没加过，push 一条新记录（用展开运算符复制一份，避免直接引用原对象）
+              this.cart.push({ ...product, count: 1 });
+            }
+          },
+
+          // 处理"删除某一项"
+          removeItem(index) {
+            this.cart.splice(index, 1);
+          },
+
+          // 处理"数量增减"
+          changeCount(index, delta) {
+            const item = this.cart[index];
+            const next = item.count + delta;
+            if (next <= 0) {
+              // 减到 0 就直接删掉
+              this.cart.splice(index, 1);
+              return;
+            }
+            item.count = next;
+          },
+
+          // 处理"清空"
+          clearCart() {
+            if (confirm("确定清空购物车吗？")) {
+              this.cart = [];
+            }
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>02 - Vuex mutations 与 actions</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #41b883;
+      }
+      .intro {
+        background: #f0f9eb;
+        border-left: 4px solid #41b883;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      button {
+        padding: 7px 16px;
+        margin: 4px 8px 4px 0;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        border-color: #41b883;
+        color: #41b883;
+      }
+      button.danger:hover {
+        border-color: #f56c6c;
+        color: #f56c6c;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      .count-show {
+        font-size: 34px;
+        font-weight: bold;
+        color: #41b883;
+      }
+      .flow {
+        background: #f8f9fb;
+        border-radius: 6px;
+        padding: 12px 16px;
+        font-family: Consolas, monospace;
+        font-size: 13px;
+        color: #606266;
+        line-height: 1.9;
+      }
+      .flow .good {
+        color: #67c23a;
+        font-weight: bold;
+      }
+      .flow .bad {
+        color: #f56c6c;
+        font-weight: bold;
+      }
+      .log {
+        background: #1e1e1e;
+        color: #7ec699;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: Consolas, monospace;
+        max-height: 140px;
+        overflow: auto;
+      }
+      .loading {
+        color: #e6a23c;
+        font-size: 13px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid #ebeef5;
+        padding: 8px 10px;
+        text-align: left;
+      }
+      th {
+        background: #fafafa;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Vuex：mutations 与 actions</h1>
+      <div class="intro">
+        <b>上一个文件只讲了"读"。</b>这一页讲"改"。<br />
+        Vuex 有个硬性规定：<b>改 state 必须 commit 一个 mutation</b>，不能直接
+        <code>this.$store.state.count++</code>；异步操作（发请求、定时器）则放到 <code>actions</code> 里，
+        由它去 commit mutation。
+      </div>
+
+      <!-- ============ 同步 mutation ============ -->
+      <div class="box">
+        <h2>一、mutations：同步修改 state</h2>
+        <p>
+          当前 count = <span class="count-show">{{ $store.state.count }}</span>
+        </p>
+        <button @click="commitAdd">commit('ADD', 1) 加 1</button>
+        <button @click="commitSub">commit('SUB', 1) 减 1</button>
+
+        <div class="flow" style="margin-top:12px">
+          组件里：<span class="good">this.$store.commit('ADD', 1)</span><br />
+          store 里：mutations: { ADD(state, n) { state.count += n } }<br />
+          <span style="color:#909399">
+            → commit 的作用：明确"是谁、用什么方式改了数据"，devtools 里能看到每一次变化的快照
+          </span>
+        </div>
+      </div>
+
+      <!-- ============ 异步 action ============ -->
+      <div class="box">
+        <h2>二、actions：处理异步，内部再 commit</h2>
+        <button @click="dispatchAdd">dispatch('addAsync', 5) 延迟 1 秒后加 5</button>
+        <span class="loading" v-if="$store.state.loading">⏳ 请求中，请稍候...</span>
+
+        <div class="flow" style="margin-top:12px">
+          组件里：<span class="good">this.$store.dispatch('addAsync', 5)</span><br />
+          store 里：<br />
+          actions: {<br />
+          &nbsp;&nbsp;addAsync({ commit }, n) {<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;commit('SET_LOADING', true)<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() =&gt; { <span style="color:#888">// 真实项目这里是发请求</span><br />
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commit('ADD', n)<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;commit('SET_LOADING', false)<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;}, 1000)<br />
+          &nbsp;&nbsp;}<br />
+          }
+        </div>
+        <p style="font-size:13px;color:#909399">
+          规律：<b>action 自己不碰 state</b>，它只负责"什么时候改"，真正改数据还是交给 mutation。
+        </p>
+      </div>
+
+      <!-- ============ 错误示范 ============ -->
+      <div class="box">
+        <h2>三、错误示范：直接改 state 会怎样</h2>
+        <p style="font-size:14px">
+          本页的 store 开启了 <code>strict: true</code>（严格模式），任何不经过 mutation 的修改都会被拦截。
+        </p>
+        <button class="danger" @click="mutateDirectly">
+          直接 this.$store.state.count++（错误示范）
+        </button>
+
+        <div class="flow" style="margin-top:12px">
+          <span class="bad">❌ 直接改</span>：this.$store.state.count++<br />
+          &nbsp;&nbsp;&nbsp;→ 严格模式下抛错：do not mutate vuex store state outside mutations<br />
+          <span class="good">✅ 正确</span>：this.$store.commit('ADD', 1)
+        </div>
+
+        <div class="log" style="margin-top:12px">
+          <div v-for="(l, i) in logs" :key="i">{{ l }}</div>
+          <div v-if="!logs.length" style="color:#666">（操作后会在这里显示结果）</div>
+        </div>
+      </div>
+
+      <!-- ============ 对比表 ============ -->
+      <div class="box">
+        <h2>四、mutation 与 action 对比</h2>
+        <table>
+          <tr>
+            <th>对比项</th>
+            <th>mutations</th>
+            <th>actions</th>
+          </tr>
+          <tr>
+            <td>职责</td>
+            <td>真正修改 state</td>
+            <td>处理业务逻辑 / 异步，再 commit</td>
+          </tr>
+          <tr>
+            <td>能否异步</td>
+            <td><b>必须同步</b></td>
+            <td>可以异步</td>
+          </tr>
+          <tr>
+            <td>组件里调用</td>
+            <td><code>this.$store.commit('名字', 参数)</code></td>
+            <td><code>this.$store.dispatch('名字', 参数)</code></td>
+          </tr>
+          <tr>
+            <td>第一个参数</td>
+            <td><code>state</code></td>
+            <td><code>context</code>（含 commit / dispatch / state）</td>
+          </tr>
+          <tr>
+            <td>devtools 追踪</td>
+            <td>每次变化都有记录</td>
+            <td>记录的是它内部 commit 的那次</td>
+          </tr>
+        </table>
+        <p style="font-size:13px;color:#909399;margin-top:12px">
+          <b>为什么 mutation 必须同步？</b>因为 devtools 需要知道"这次变化到底是哪个操作引起的"。
+          如果 mutation 里塞了定时器/请求，等回调执行时早就过了那个时间点，工具就记录不准了。
+          所以：<b>同步的改动用 commit，异步的先 dispatch 再 commit。</b>
+        </p>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script src="../js/vuex.js"></script>
+    <script>
+      const store = new Vuex.Store({
+        // 严格模式：不在 mutation 里改 state 就报错（仅开发环境建议开，生产环境要关，有性能开销）
+        strict: true,
+
+        state: {
+          count: 0,
+          loading: false,
+        },
+
+        mutations: {
+          // mutation 的第一个参数固定是 state
+          ADD(state, n) {
+            state.count += n;
+          },
+          SUB(state, n) {
+            state.count -= n;
+          },
+          SET_LOADING(state, value) {
+            state.loading = value;
+          },
+        },
+
+        actions: {
+          // action 的第一个参数是 context（可解构出 commit、dispatch、state、getters）
+          addAsync({ commit }, n) {
+            commit("SET_LOADING", true);
+            // 用定时器模拟一个异步请求
+            setTimeout(() => {
+              commit("ADD", n);
+              commit("SET_LOADING", false);
+            }, 1000);
+          },
+        },
+      });
+
+      new Vue({
+        el: "#app",
+        store,
+        data: {
+          logs: [],
+        },
+        methods: {
+          pushLog(msg) {
+            this.logs.unshift("[" + new Date().toLocaleTimeString() + "] " + msg);
+          },
+
+          // ===== 同步：commit =====
+          commitAdd() {
+            this.$store.commit("ADD", 1);
+            this.pushLog("✅ commit('ADD', 1) 成功，count = " + this.$store.state.count);
+          },
+          commitSub() {
+            this.$store.commit("SUB", 1);
+            this.pushLog("✅ commit('SUB', 1) 成功，count = " + this.$store.state.count);
+          },
+
+          // ===== 异步：dispatch =====
+          dispatchAdd() {
+            this.pushLog("⏳ dispatch('addAsync', 5) 已发出，等待 1 秒...");
+            // dispatch 返回的是 Promise，可以 .then 拿到 action 的返回值
+            this.$store.dispatch("addAsync", 5).then(() => {
+              this.pushLog("✅ addAsync 执行完毕，count = " + this.$store.state.count);
+            });
+          },
+
+          // ===== 错误示范：直接改 state =====
+          mutateDirectly() {
+            try {
+              // 严格模式下，这一行会抛出错误
+              this.$store.state.count++;
+              this.pushLog("⚠️ 竟然没报错？说明没有开启 strict 模式");
+            } catch (e) {
+              this.pushLog("❌ 被拦截：" + e.message);
+            }
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

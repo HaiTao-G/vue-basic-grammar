@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>08 - 计算属性的使用</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 22px 0 10px;
+        color: #409eff;
+      }
+      .intro {
+        background: #ecf5ff;
+        border-left: 4px solid #409eff;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      input {
+        padding: 6px 10px;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+        margin: 4px 6px 4px 0;
+      }
+      button {
+        padding: 6px 14px;
+        margin: 4px 6px 4px 0;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #409eff;
+        color: #409eff;
+      }
+      .row {
+        margin: 8px 0;
+      }
+      .result {
+        color: #67c23a;
+        font-weight: bold;
+      }
+      .count {
+        display: inline-block;
+        min-width: 28px;
+        padding: 1px 8px;
+        background: #f0f2f5;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 13px;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid #ebeef5;
+        padding: 8px 10px;
+        text-align: left;
+      }
+      th {
+        background: #fafafa;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>计算属性 computed</h1>
+      <div class="intro">
+        <b>是什么：</b>计算属性是基于响应式数据<b>派生</b>出来的值，写在 <code>computed</code> 里。
+        它像一个"聪明的变量"——依赖的数据变了，它会自动重新算；依赖没变，它就直接返回<b>缓存</b>的旧值，不重复计算。<br />
+        适用场景：需要由两个或多个 data 计算得来的值（全名、总价、过滤列表等）。
+      </div>
+
+      <!-- ============ 1. 基础用法 ============ -->
+      <div class="box">
+        <h2>一、基础用法：拼接全名</h2>
+        <div class="row">
+          姓：<input v-model="firstName" />
+          名：<input v-model="lastName" />
+        </div>
+        <div class="row">
+          完整姓名（computed）：<span class="result">{{ fullName }}</span>
+        </div>
+        <p style="font-size:13px;color:#909399">
+          试着只改"姓"或"名"，fullName 会自动更新；不用你手动去同步两个字段。
+        </p>
+      </div>
+
+      <!-- ============ 2. 缓存特性（核心）============ -->
+      <div class="box">
+        <h2>二、缓存特性：computed vs methods（重点理解）</h2>
+        <div class="row">
+          商品单价：<input type="number" v-model.number="price" />
+          购买数量：<input type="number" v-model.number="count" />
+          <!-- 这个字段和总价无关，用来测试"依赖没变时是否重算" -->
+          无关数据：<input type="number" v-model.number="other" />
+        </div>
+        <div class="row">
+          总价（computed）：<span class="result">¥{{ total }}</span>
+          ｜ computed 重算次数：<span class="count">{{ computedCount }}</span>
+        </div>
+        <div class="row">
+          总价（methods 调用）：<span class="result">¥{{ getTotal() }}</span>
+          ｜ methods 调用次数：<span class="count">{{ methodCount }}</span>
+        </div>
+        <p style="font-size:13px;color:#909399">
+          解释：页面里 <code>{{ total }}</code> 和 <code>{{ getTotal() }}</code> 都会渲染，
+          但 computed 有<b>缓存</b>——只有 <code>price/count</code> 变化才会重算（computedCount 才 +1）；
+          而 methods 每次渲染都执行（methodCount 一直涨）。<br />
+          自己验证：只改"无关数据"，会发现 methodCount 又涨了，但 computedCount 纹丝不动。
+        </p>
+      </div>
+
+      <!-- ============ 3. get / set ============ -->
+      <div class="box">
+        <h2>三、可写的计算属性（getter / setter）</h2>
+        <p style="font-size:13px;color:#909399">
+          默认 computed 是只读的（只有 get）。给它加上 set，就能"反过来"：
+          直接改 fullName，会自动把姓和名拆开写回。
+        </p>
+        <div class="row">
+          fullName（可编辑）：<input v-model="fullNameWritable" />
+        </div>
+        <div class="row">
+          拆开后 —— 姓：<span class="result">{{ firstName2 }}</span>
+          ｜ 名：<span class="result">{{ lastName2 }}</span>
+        </div>
+      </div>
+
+      <!-- ============ 4. 对比表 ============ -->
+      <div class="box">
+        <h2>四、computed 与 methods 怎么选</h2>
+        <table>
+          <tr>
+            <th>对比项</th>
+            <th>computed（计算属性）</th>
+            <th>methods（方法）</th>
+          </tr>
+          <tr>
+            <td>写法</td>
+            <td>模板里 <code>{{ fullName }}</code>（不加括号）</td>
+            <td>模板里 <code>{{ getTotal() }}</code>（加括号）</td>
+          </tr>
+          <tr>
+            <td>是否有缓存</td>
+            <td>有，依赖不变不重算</td>
+            <td>无，每次都执行</td>
+          </tr>
+          <tr>
+            <td>适合</td>
+            <td>依赖 data 算出来的"值"</td>
+            <td>事件处理、不依赖缓存的逻辑</td>
+          </tr>
+          <tr>
+            <td>能否异步</td>
+            <td>不能（必须是同步 return）</td>
+            <td>可以</td>
+          </tr>
+        </table>
+        <p style="font-size:13px;color:#909399;margin-top:10px">
+          一句话：要的是一个"值"就优先用 computed；要的是"做一件事"（尤其是带副作用/异步）就用 methods 或 watch。
+        </p>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script>
+      new Vue({
+        el: "#app",
+        data: {
+          // ---- 区块一 / 三 用 ----
+          firstName: "张",
+          lastName: "三",
+          firstName2: "李",
+          lastName2: "四",
+          // ---- 区块二 用 ----
+          price: 100,
+          count: 2,
+          other: 0,
+          computedCount: 0,
+          methodCount: 0,
+        },
+        computed: {
+          // 基础：返回派生值
+          fullName() {
+            return this.firstName + this.lastName;
+          },
+
+          // 缓存演示：每次真正重算时，计数 +1（注意内部有"副作用"，仅用于演示）
+          total() {
+            this.computedCount++;
+            return this.price * this.count;
+          },
+
+          // get/set：可读可写
+          fullNameWritable: {
+            get() {
+              return this.firstName2 + this.lastName2;
+            },
+            set(val) {
+              // 简单地按第一个字符拆姓、其余拆名（演示用）
+              this.firstName2 = val.charAt(0);
+              this.lastName2 = val.slice(1);
+            },
+          },
+        },
+        methods: {
+          getTotal() {
+            // 每次模板调用该方法都会执行一次，所以 methodCount 会一直涨
+            this.methodCount++;
+            return this.price * this.count;
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

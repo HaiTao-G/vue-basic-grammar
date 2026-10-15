@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>09 - 监听器的使用</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 22px 0 10px;
+        color: #e6a23c;
+      }
+      .intro {
+        background: #fdf6ec;
+        border-left: 4px solid #e6a23c;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      input {
+        padding: 6px 10px;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+        margin: 4px 6px 4px 0;
+      }
+      button {
+        padding: 6px 14px;
+        margin: 4px 6px 4px 0;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #e6a23c;
+        color: #e6a23c;
+      }
+      .row {
+        margin: 8px 0;
+      }
+      .result {
+        color: #67c23a;
+        font-weight: bold;
+      }
+      .log {
+        background: #1e1e1e;
+        color: #7ec699;
+        padding: 10px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-family: Consolas, monospace;
+        max-height: 150px;
+        overflow: auto;
+        line-height: 1.6;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid #ebeef5;
+        padding: 8px 10px;
+        text-align: left;
+      }
+      th {
+        background: #fafafa;
+      }
+      .searching {
+        color: #e6a23c;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>监听器 watch</h1>
+      <div class="intro">
+        <b>是什么：</b>监听器用来"<b>观察</b>"某个数据，当它发生变化时执行一段<b>副作用</b>代码
+        （发请求、写入本地存储、弹提示等）。写在 <code>watch</code> 里。<br />
+        它和 computed 最大的不同：computed 是"<b>算出一个值</b>"，watch 是"<b>数据变了去做点事</b>"。<br />
+        经典场景：搜索框输入联想、表单自动保存、路由变化、异步请求。
+      </div>
+
+      <!-- ============ 1. 基础监听 ============ -->
+      <div class="box">
+        <h2>一、基础监听：数据变化即触发</h2>
+        <div class="row">
+          用户名：<input v-model="username" placeholder="输入用户名" />
+        </div>
+        <div class="row">
+          提示：<span class="result">{{ tip }}</span>
+        </div>
+        <p style="font-size:13px;color:#909399">
+          watch 监听 username，每次变化就把旧值、新值打印到下方日志（打开控制台也能看到）。
+        </p>
+      </div>
+
+      <!-- ============ 2. 深度监听 ============ -->
+      <div class="box">
+        <h2>二、深度监听：监听对象内部变化（deep）</h2>
+        <p style="font-size:13px;color:#909399">
+          普通 watch <b>只监听引用</b>，对象内部的属性改了不会触发。要监听对象内部，必须加 <code>deep: true</code>。
+        </p>
+        <div class="row">
+          城市：<input v-model="address.city" />
+          街道：<input v-model="address.street" />
+        </div>
+        <div class="row">当前地址：<span class="result">{{ address.city }} · {{ address.street }}</span></div>
+        <div class="row">
+          <button @click="changeCityRef">用新对象替换（普通监听也会触发）</button>
+        </div>
+      </div>
+
+      <!-- ============ 3. immediate ============ -->
+      <div class="box">
+        <h2>三、立即执行：immediate</h2>
+        <p style="font-size:13px;color:#909399">
+          默认 watch 要"变化"才触发。加 <code>immediate: true</code>，<b>初始化时就先执行一次</b>。
+          适合：进入页面就按要求加载初始数据。
+        </p>
+        <div class="row">
+          关键词：<input v-model="keywordInit" />
+          ｜ 已加载次数：<span class="result">{{ loadCount }}</span>
+        </div>
+      </div>
+
+      <!-- ============ 4. 异步场景 ============ -->
+      <div class="box">
+        <h2>四、异步场景：输入联想（watch 的主场）</h2>
+        <p style="font-size:13px;color:#909399">
+          这是 computed 做不到的：watch 里可以发请求、设定时器。下面模拟"输入后延迟搜索"。
+        </p>
+        <div class="row">
+          搜索：<input v-model="searchText" placeholder="输入关键词，如 vue" />
+          <span class="searching" v-if="searching">搜索中...</span>
+        </div>
+        <div class="row" v-if="searchResult.length">
+          匹配结果：
+          <span class="result" v-for="r in searchResult" :key="r" style="margin-right:10px">{{ r }}</span>
+        </div>
+      </div>
+
+      <!-- ============ 5. 对比表 ============ -->
+      <div class="box">
+        <h2>五、computed 与 watch 怎么选</h2>
+        <table>
+          <tr>
+            <th>对比项</th>
+            <th>computed</th>
+            <th>watch</th>
+          </tr>
+          <tr>
+            <td>目的</td>
+            <td>算出一个"新值"</td>
+            <td>数据变了"去做一件事"（副作用）</td>
+          </tr>
+          <tr>
+            <td>能否异步</td>
+            <td>不能</td>
+            <td>能（发请求、定时器）</td>
+          </tr>
+          <tr>
+            <td>缓存</td>
+            <td>有</td>
+            <td>无（每次变化都执行）</td>
+          </tr>
+          <tr>
+            <td>监听对象内部</td>
+            <td>—</td>
+            <td>需 <code>deep: true</code></td>
+          </tr>
+          <tr>
+            <td>典型场景</td>
+            <td>全名、总价、过滤列表</td>
+            <td>搜索联想、表单自动保存、路由守卫联动</td>
+          </tr>
+        </table>
+        <p style="font-size:13px;color:#909399;margin-top:10px">
+          经验法则：如果只是要把几个数据"算成一个值"展示，用 computed；
+          如果要在数据变化时"执行动作"（尤其是异步），用 watch。多数派生显示场景优先 computed。
+        </p>
+      </div>
+
+      <!-- 统一日志区，直观看到每次 watch 的触发 -->
+      <div class="box">
+        <h2>监听触发日志（console 里也有）</h2>
+        <div class="log">
+          <div v-for="(item, idx) in logs" :key="idx">{{ item }}</div>
+          <div v-if="!logs.length" style="color:#666">（暂无触发）</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script>
+      new Vue({
+        el: "#app",
+        data: {
+          username: "",
+          tip: "请输入用户名",
+          address: { city: "北京", street: "长安街" },
+          keywordInit: "初始关键词",
+          loadCount: 0,
+          searchText: "",
+          searching: false,
+          searchResult: [],
+          logs: [],
+        },
+        methods: {
+          pushLog(msg) {
+            this.logs.unshift("[" + new Date().toLocaleTimeString() + "] " + msg);
+            console.log(msg);
+          },
+          changeCityRef() {
+            // 直接替换整个对象引用，普通 watch 也能感知到
+            this.address = { city: "上海", street: "南京路" };
+          },
+        },
+        watch: {
+          // 1. 基础写法（函数）：监听 username
+          username(newVal, oldVal) {
+            this.tip = newVal ? "你输入了：" + newVal : "请输入用户名";
+            this.pushLog("username 变化：" + oldVal + " ➜ " + newVal);
+          },
+
+          // 2. 深度监听：监听 address 内部属性，必须 deep: true
+          address: {
+            deep: true,
+            handler(newVal, oldVal) {
+              this.pushLog("address 深度变化 ➜ " + newVal.city + " · " + newVal.street);
+            },
+          },
+
+          // 3. 立即执行：初始化就跑一次
+          keywordInit: {
+            immediate: true,
+            handler(val) {
+              this.loadCount++;
+              this.pushLog("keywordInit 初始化立即执行：加载 " + val);
+            },
+          },
+
+          // 4. 异步场景：搜索联想（watch 的主场）
+          searchText(newVal) {
+            if (!newVal.trim()) {
+              this.searchResult = [];
+              this.searching = false;
+              return;
+            }
+            this.searching = true;
+            // 模拟"输入后延迟发请求"（真实项目这里换成 axios 请求）
+            // 用 setTimeout 制造异步，并模拟"最新的输入才生效"（防抖思路）
+            clearTimeout(this._t);
+            this._t = setTimeout(() => {
+              const pool = ["vue", "vue-router", "vuex", "vite", "react"];
+              this.searchResult = pool.filter((p) => p.includes(newVal.toLowerCase()));
+              this.searching = false;
+              this.pushLog("搜索：" + newVal + " ➜ " + JSON.stringify(this.searchResult));
+            }, 400);
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>01 - Vuex 入门 state 与 getters</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #41b883;
+      }
+      .intro {
+        background: #f0f9eb;
+        border-left: 4px solid #41b883;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      .layout {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .layout > div {
+        flex: 1;
+        min-width: 260px;
+      }
+      .comp {
+        border: 2px dashed #41b883;
+        border-radius: 8px;
+        padding: 14px;
+        background: #f6fdf9;
+      }
+      .comp.alt {
+        border-color: #409eff;
+        background: #f7fbff;
+      }
+      .comp-title {
+        font-size: 12px;
+        font-weight: bold;
+        color: #41b883;
+        margin-bottom: 8px;
+      }
+      .comp.alt .comp-title {
+        color: #409eff;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      .big {
+        font-size: 26px;
+        font-weight: bold;
+        color: #41b883;
+      }
+      .store-panel {
+        background: #1e1e1e;
+        color: #dcdcdc;
+        border-radius: 8px;
+        padding: 16px 18px;
+        font-family: Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.8;
+      }
+      .store-panel .key {
+        color: #7ec699;
+      }
+      .store-panel .num {
+        color: #f8c555;
+      }
+      .store-panel .str {
+        color: #ce9178;
+      }
+      .arrow {
+        text-align: center;
+        color: #909399;
+        font-size: 13px;
+        margin: 6px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Vuex 入门：state 与 getters</h1>
+      <div class="intro">
+        <b>要解决的问题：</b>下面两个组件是"兄弟"关系，它们需要显示同一份数据。
+        按 06 章学的父子传值，得把数据提到父组件、再分别传下去，很麻烦。<br />
+        <b>Vuex 的思路：</b>把这份数据放进一个"公共仓库"（store），两个组件都直接从仓库里取。<br />
+        <b>本页只讲"读"：</b><code>state</code> 存数据，<code>getters</code> 是仓库里的计算属性。
+      </div>
+
+      <!-- 仓库当前长什么样，实时展示 -->
+      <div class="box">
+        <h2>仓库（store）当前的样子</h2>
+        <div class="store-panel">
+          state: {<br />
+          &nbsp;&nbsp;<span class="key">count</span>: <span class="num">{{ $store.state.count }}</span>,<br />
+          &nbsp;&nbsp;<span class="key">user</span>: { <span class="key">name</span>:
+          <span class="str">"{{ $store.state.user.name }}"</span>, <span class="key">vip</span>:
+          <span class="num">{{ $store.state.user.vip }}</span> }<br />
+          }
+        </div>
+        <p style="font-size:13px;color:#909399;margin-bottom:4px">getters（仓库的计算属性）：</p>
+        <div class="store-panel">
+          <span class="key">doubleCount</span>: <span class="num">{{ $store.getters.doubleCount }}</span>
+          &nbsp;&nbsp;<span style="color:#888">// count × 2</span><br />
+          <span class="key">vipText</span>: <span class="str">"{{ $store.getters.vipText }}"</span>
+          &nbsp;&nbsp;<span style="color:#888">// 根据 vip 状态返回文案</span>
+        </div>
+      </div>
+
+      <!-- 两个兄弟组件 -->
+      <div class="box">
+        <h2>两个兄弟组件，共享同一份数据</h2>
+        <div class="layout">
+          <show-panel-a></show-panel-a>
+          <show-panel-b></show-panel-b>
+        </div>
+        <div class="arrow">
+          两个组件都从同一个 store 取数据 ↑↑ 数据完全一致
+        </div>
+      </div>
+
+      <!-- 说明 -->
+      <div class="box">
+        <h2>知识点</h2>
+        <table style="width:100%;border-collapse:collapse;font-size:14px">
+          <tr style="background:#fafafa">
+            <th style="border:1px solid #ebeef5;padding:8px;text-align:left">概念</th>
+            <th style="border:1px solid #ebeef5;padding:8px;text-align:left">作用</th>
+            <th style="border:1px solid #ebeef5;padding:8px;text-align:left">组件里怎么读</th>
+          </tr>
+          <tr>
+            <td style="border:1px solid #ebeef5;padding:8px"><code>state</code></td>
+            <td style="border:1px solid #ebeef5;padding:8px">存放共享数据（相当于组件的 data）</td>
+            <td style="border:1px solid #ebeef5;padding:8px">
+              <code>this.$store.state.count</code>
+            </td>
+          </tr>
+          <tr>
+            <td style="border:1px solid #ebeef5;padding:8px"><code>getters</code></td>
+            <td style="border:1px solid #ebeef5;padding:8px">
+              对 state 做派生（相当于组件的 computed），有缓存
+            </td>
+            <td style="border:1px solid #ebeef5;padding:8px">
+              <code>this.$store.getters.doubleCount</code>
+            </td>
+          </tr>
+        </table>
+        <p style="font-size:13px;color:#909399;margin-top:12px">
+          小技巧：getters 的第二个参数就是其他 getters，可以互相引用；
+          组件里也可以用 <code>this.$store</code> 在控制台手动查看整个仓库。
+        </p>
+        <p style="font-size:13px;color:#e6a23c">
+          注意：本页只"读"。要"改"state 必须用 mutation / action —— 见下一个文件。
+        </p>
+      </div>
+    </div>
+
+    <!-- 引入顺序：Vue 必须在最前 -->
+    <script src="../js/vue.js"></script>
+    <script src="../js/vuex.js"></script>
+    <script>
+      // ============================================================
+      // 第 1 步：创建 store（仓库）
+      // ============================================================
+      // 说明：Vuex 3 的 UMD 构建检测到全局 Vue 会自动安装，所以这里不需要写 Vue.use(Vuex)
+      const store = new Vuex.Store({
+        // state：仓库里的数据，写法是一个函数返回对象（和组件 data 一样）
+        state: {
+          count: 0,
+          user: {
+            name: "海涛",
+            vip: true,
+          },
+        },
+
+        // getters：仓库里的"计算属性"，基于 state 派生
+        getters: {
+          // 第一个参数是 state
+          doubleCount(state) {
+            return state.count * 2;
+          },
+          // 第二个参数是其他 getters，可以互相引用
+          vipText(state, getters) {
+            return state.user.vip ? "VIP 会员（count 的两倍是 " + getters.doubleCount + "）" : "普通用户";
+          },
+        },
+      });
+
+      // ============================================================
+      // 第 2 步：两个子组件，各自从 store 读数据
+      // ============================================================
+      Vue.component("show-panel-a", {
+        // 在组件里通过 this.$store 访问仓库
+        template: `
+          <div class="comp">
+            <div class="comp-title">子组件 A（app-header）</div>
+            <p style="font-size:14px">从 $store.state 读：</p>
+            <p class="big">{{ $store.state.count }}</p>
+            <p style="font-size:14px">从 $store.getters 读：</p>
+            <p>两倍值 = <b>{{ $store.getters.doubleCount }}</b></p>
+            <p style="font-size:13px;color:#909399">{{ $store.getters.vipText }}</p>
+          </div>`,
+      });
+
+      Vue.component("show-panel-b", {
+        template: `
+          <div class="comp alt">
+            <div class="comp-title">子组件 B（app-sidebar）</div>
+            <p style="font-size:14px">我也读同一份数据：</p>
+            <p class="big" style="color:#409eff">{{ $store.state.count }}</p>
+            <p style="font-size:14px">用户：<b>{{ $store.state.user.name }}</b></p>
+            <p style="font-size:13px;color:#909399">
+              A 和 B 之间没有任何 props 传递，但数据天然一致。
+            </p>
+          </div>`,
+      });
+
+      // ============================================================
+      // 第 3 步：挂载 store 到根实例
+      // ============================================================
+      // 挂载后，所有子组件都能用 this.$store 访问到它
+      new Vue({
+        el: "#app",
+        store, // 简写，等于 store: store
+      });
+    </script>
+  </body>
+</html>

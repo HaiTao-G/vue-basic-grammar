@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>06 - Vuex 与 Pinia 对比与选型</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+      }
+      .intro {
+        background: #ecf5ff;
+        border-left: 4px solid #409eff;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      .layout {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .layout > div {
+        flex: 1;
+        min-width: 300px;
+      }
+      .side {
+        border-radius: 8px;
+        padding: 16px;
+      }
+      .side.vuex {
+        border: 2px solid #41b883;
+        background: #f6fdf9;
+      }
+      .side.pinia {
+        border: 2px solid #e6a23c;
+        background: #fffdf5;
+      }
+      .side-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed #ddd;
+      }
+      .side.vuex .side-title {
+        color: #41b883;
+      }
+      .side.pinia .side-title {
+        color: #b8860b;
+      }
+      .num {
+        font-size: 40px;
+        font-weight: bold;
+        margin: 6px 0;
+      }
+      .side.vuex .num {
+        color: #41b883;
+      }
+      .side.pinia .num {
+        color: #e6a23c;
+      }
+      button {
+        padding: 6px 14px;
+        margin: 4px 6px 4px 0;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        border-color: #409eff;
+        color: #409eff;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      pre {
+        background: #1e1e1e;
+        color: #dcdcdc;
+        padding: 14px;
+        border-radius: 6px;
+        overflow: auto;
+        font-size: 12.5px;
+        line-height: 1.65;
+        margin: 0;
+      }
+      pre .c {
+        color: #888;
+      }
+      pre .k {
+        color: #7ec699;
+      }
+      pre .r {
+        color: #f56c6c;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid #ebeef5;
+        padding: 8px 10px;
+        text-align: left;
+      }
+      th {
+        background: #fafafa;
+      }
+      .win {
+        color: #67c23a;
+        font-weight: bold;
+      }
+      .conclusion {
+        background: #f0f9eb;
+        border-left: 4px solid #67c23a;
+        padding: 14px 18px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+      .conclusion b {
+        color: #529b2e;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Vuex 与 Pinia：对比与选型</h1>
+      <div class="intro">
+        同一个功能（一个计数器 + 异步加一），左右两边分别用 Vuex 和 Pinia 实现，都真实运行着。<br />
+        点一点两边的按钮，感受一下"改数据"的写法差异，再看下面的代码对照。
+      </div>
+
+      <!-- ============ 并排运行 ============ -->
+      <div class="box">
+        <h2>同一个功能，两套实现</h2>
+        <div class="layout">
+          <!-- Vuex 版 -->
+          <div class="side vuex">
+            <div class="side-title">Vuex 3 实现</div>
+            <p style="font-size:13px;color:#909399;margin:0">读：$store.state.count</p>
+            <div class="num">{{ $store.state.count }}</div>
+            <button @click="$store.commit('INC')">commit('INC') 加 1</button>
+            <button @click="$store.dispatch('incAsync')">dispatch('incAsync') 异步加 1</button>
+            <p style="font-size:13px;color:#909399">
+              改数据必须走 <code>commit</code> → 触发 mutation → 修改 state，三层链路。
+            </p>
+          </div>
+
+          <!-- Pinia 版 -->
+          <div class="side pinia">
+            <div class="side-title">Pinia 2 实现</div>
+            <p style="font-size:13px;color:#909399;margin:0">读：counter.count</p>
+            <div class="num">{{ counter.count }}</div>
+            <button @click="counter.inc()">counter.inc() 加 1</button>
+            <button @click="counter.incAsync()">counter.incAsync() 异步加 1</button>
+            <p style="font-size:13px;color:#909399">
+              改数据直接调 action，action 里 <code>this.count++</code> 就完事了，没有中间层。
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 代码对照 ============ -->
+      <div class="box">
+        <h2>代码对照</h2>
+        <div class="layout">
+          <div>
+            <p style="font-size:14px;color:#41b883;font-weight:bold">Vuex 版</p>
+            <pre><span class="c">// 定义</span>
+const store = new Vuex.Store({
+  state: { count: 0 },
+  <span class="k">mutations</span>: {              <span class="c">// 必须有</span>
+    INC(state) { state.count++ }
+  },
+  <span class="k">actions</span>: {
+    incAsync({ commit }) {
+      setTimeout(() =&gt; <span class="r">commit('INC')</span>, 500)
+      <span class="c">// action 自己不碰 state，还得转手 commit</span>
+    }
+  }
+})
+
+<span class="c">// 组件里</span>
+new Vue({ el: '#app', store })
+
+<span class="c">// 读</span>
+this.$store.state.count
+
+<span class="c">// 改（同步）</span>
+this.$store.<span class="k">commit</span>('INC')
+
+<span class="c">// 改（异步）</span>
+this.$store.<span class="k">dispatch</span>('incAsync')</pre>
+          </div>
+
+          <div>
+            <p style="font-size:14px;color:#b8860b;font-weight:bold">Pinia 版</p>
+            <pre><span class="c">// 定义</span>
+const useCounter = Pinia.defineStore('counter', {
+  state: () =&gt; ({ count: 0 }),
+  <span class="k">actions</span>: {                 <span class="c">// 只有这个</span>
+    inc() { <span class="k">this.count++</span> },
+    async incAsync() {
+      await new Promise(r =&gt; setTimeout(r, 500))
+      <span class="k">this.count++</span>
+      <span class="c">// 同步异步都直接改，不用绕</span>
+    }
+  }
+})
+
+<span class="c">// 组件里</span>
+Vue.use(Pinia.PiniaVuePlugin)
+new Vue({ el: '#app', pinia: Pinia.createPinia() })
+
+<span class="c">// 读</span>
+const counter = useCounter()
+counter.count
+
+<span class="c">// 改（同步 / 异步都一样）</span>
+counter.inc()
+counter.incAsync()</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ 对比表 ============ -->
+      <div class="box">
+        <h2>逐项对比</h2>
+        <table>
+          <tr>
+            <th>对比项</th>
+            <th>Vuex 3</th>
+            <th>Pinia 2</th>
+          </tr>
+          <tr>
+            <td>核心概念</td>
+            <td>state / getters / <b>mutations</b> / actions（四件套）</td>
+            <td>state / getters / actions（三件套）</td>
+          </tr>
+          <tr>
+            <td>改 state</td>
+            <td>必须 commit mutation</td>
+            <td class="win">直接改（action 里 this.xxx）</td>
+          </tr>
+          <tr>
+            <td>异步</td>
+            <td>actions 里 commit</td>
+            <td class="win">actions 里直接改，async/await 直接用</td>
+          </tr>
+          <tr>
+            <td>拆模块</td>
+            <td>modules + namespaced + 前缀字符串 <code>'cart/ADD'</code></td>
+            <td class="win">直接建多个 store，互相 import 就行</td>
+          </tr>
+          <tr>
+            <td>在组件里用</td>
+            <td><code>this.$store</code> + map 系列辅助函数</td>
+            <td class="win"><code>useXxxStore()</code> 一行搞定</td>
+          </tr>
+          <tr>
+            <td>TypeScript</td>
+            <td>支持一般，类型推断弱</td>
+            <td class="win">原生友好，类型推断强</td>
+          </tr>
+          <tr>
+            <td>体积</td>
+            <td>较大</td>
+            <td class="win">更小（约 1.5KB）</td>
+          </tr>
+          <tr>
+            <td>devtools 调试</td>
+            <td>支持（时间旅行）</td>
+            <td>支持</td>
+          </tr>
+          <tr>
+            <td>官方定位</td>
+            <td>Vue 2 时代的标准方案，现处于维护状态</td>
+            <td class="win">Vue 3 官方推荐，也是 Vue 2.7 可用的新方案</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- ============ 选型建议 ============ -->
+      <div class="box">
+        <h2>那到底用哪个？</h2>
+        <div class="conclusion">
+          <b>1. 新项目（尤其 Vue 3）→ 直接上 Pinia。</b>官方推荐，心智负担小，TS 友好。<br /><br />
+          <b>2. 已有的 Vue 2 + Vuex 项目 → 保持 Vuex，别为了新而迁移。</b>
+          Vuex 3 依旧能用，迁移收益不大、风险不小。<br /><br />
+          <b>3. 在学习阶段的 Vue 2.7 项目里 → 建议两个都练。</b>
+          Vuex 能帮你理解"为什么要约束改数据的方式"，Pinia 代表现在的写法。
+          面试里这两个都常被问到。<br /><br />
+          <b>4. 判断标准其实很简单：</b>团队熟什么、项目是什么版本，就用什么。
+          技术选型里"团队能维护"永远比"技术新"重要。
+        </div>
+        <p style="font-size:13px;color:#909399;margin-top:14px">
+          补充：本项目是 Vue 2.7.16，Pinia 2.1.7 能正常跑（靠 vue-demi 桥接）。
+          真正的 Vue 2.6 及更低版本用 Pinia 需要额外引入 <code>@vue/composition-api</code>，会麻烦一些。
+        </p>
+      </div>
+    </div>
+
+    <!-- Vuex 需要 vue.js 先加载 -->
+    <script src="../js/vue.js"></script>
+    <script src="../js/vuex.js"></script>
+    <!-- Pinia 需要 vue-demi 桥接，顺序不能错 -->
+    <script src="../js/vue-demi.js"></script>
+    <script src="../js/pinia.js"></script>
+    <script>
+      // ============================================================
+      // 1. Vuex store
+      // ============================================================
+      const store = new Vuex.Store({
+        state: { count: 0 },
+        mutations: {
+          INC(state) {
+            state.count++;
+          },
+        },
+        actions: {
+          incAsync({ commit }) {
+            setTimeout(() => commit("INC"), 500);
+          },
+        },
+      });
+
+      // ============================================================
+      // 2. Pinia store
+      // ============================================================
+      Vue.use(Pinia.PiniaVuePlugin);
+      const pinia = Pinia.createPinia();
+
+      // id 不能和 Vuex 的重复（本来就是两套东西，这里用 counter 区分）
+      const useCounterStore = Pinia.defineStore("counter", {
+        state: () => ({ count: 0 }),
+        actions: {
+          inc() {
+            this.count++;
+          },
+          async incAsync() {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            this.count++;
+          },
+        },
+      });
+
+      // ============================================================
+      // 3. 同一个 Vue 实例上同时挂载 Vuex 和 Pinia
+      //    （实际项目里不必两套并存，这里是为了对比演示）
+      // ============================================================
+      new Vue({
+        el: "#app",
+        store, // Vuex
+        pinia, // Pinia
+        setup() {
+          const counter = useCounterStore();
+          return { counter };
+        },
+      });
+    </script>
+  </body>
+</html>

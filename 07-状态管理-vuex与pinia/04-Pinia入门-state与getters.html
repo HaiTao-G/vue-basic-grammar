@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>04 - Pinia 入门 state 与 getters</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #b8860b;
+      }
+      .intro {
+        background: #fffbeb;
+        border-left: 4px solid #e6a23c;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      .layout {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .layout > div {
+        flex: 1;
+        min-width: 260px;
+      }
+      .comp {
+        border: 2px dashed #e6a23c;
+        border-radius: 8px;
+        padding: 14px;
+        background: #fffdf5;
+      }
+      .comp.alt {
+        border-color: #409eff;
+        background: #f7fbff;
+      }
+      .comp-title {
+        font-size: 12px;
+        font-weight: bold;
+        color: #e6a23c;
+        margin-bottom: 8px;
+      }
+      .comp.alt .comp-title {
+        color: #409eff;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      pre {
+        background: #1e1e1e;
+        color: #dcdcdc;
+        padding: 14px;
+        border-radius: 6px;
+        overflow: auto;
+        font-size: 13px;
+        line-height: 1.7;
+        margin: 8px 0;
+      }
+      pre .c {
+        color: #888;
+      }
+      pre .k {
+        color: #7ec699;
+      }
+      .big {
+        font-size: 26px;
+        font-weight: bold;
+        color: #e6a23c;
+      }
+      button {
+        padding: 6px 14px;
+        margin: 4px 8px 4px 0;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        border-color: #e6a23c;
+        color: #e6a23c;
+      }
+      .store-panel {
+        background: #1e1e1e;
+        color: #dcdcdc;
+        border-radius: 8px;
+        padding: 16px 18px;
+        font-family: Consolas, monospace;
+        font-size: 13px;
+        line-height: 1.8;
+      }
+      .store-panel .key {
+        color: #7ec699;
+      }
+      .store-panel .num {
+        color: #f8c555;
+      }
+      .warn {
+        background: #fdf6ec;
+        border-left: 4px solid #e6a23c;
+        padding: 10px 14px;
+        border-radius: 4px;
+        font-size: 13px;
+        color: #b88230;
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Pinia 入门：state 与 getters</h1>
+      <div class="intro">
+        Pinia 是 Vue 官方新一代状态管理库（Vue 3 默认推荐）。它同样支持 <b>Vue 2.7</b>，
+        在 Vue 2 项目里也能用。<br />
+        <b>和 Vuex 比，最大的不同：没有 mutations。</b>改数据直接写在 actions 里，简单直接。<br />
+        <b>本页只讲"读"：</b><code>state</code> 存数据，<code>getters</code> 是计算属性。
+      </div>
+
+      <!-- 仓库当前状态 -->
+      <div class="box">
+        <h2>仓库（store）当前的样子</h2>
+        <div class="store-panel">
+          state: {<br />
+          &nbsp;&nbsp;<span class="key">count</span>: <span class="num">{{ counter.count }}</span>,<br />
+          &nbsp;&nbsp;<span class="key">user</span>: { <span class="key">name</span>:
+          <span style="color:#ce9178">"{{ counter.user.name }}"</span> }<br />
+          }<br />
+          getters: { <span class="key">doubleCount</span>: <span class="num">{{ counter.doubleCount }}</span>
+          <span style="color:#888">// count × 2</span> }
+        </div>
+        <p style="font-size:13px;color:#909399;margin-top:10px">
+          直接用 <code>counter.xxx</code> 就能读，不需要 <code>$store.state.xxx</code> 这么长。
+        </p>
+      </div>
+
+      <!-- 两个兄弟组件共享 -->
+      <div class="box">
+        <h2>两个兄弟组件，共享同一个 store</h2>
+        <div class="layout">
+          <show-panel-a></show-panel-a>
+          <show-panel-b></show-panel-b>
+        </div>
+      </div>
+
+      <!-- 两种定义方式 -->
+      <div class="box">
+        <h2>defineStore 的两种写法</h2>
+        <p style="font-size:14px"><b>写法一：选项式</b>（和 Vuex 很像，上手快）</p>
+        <pre>const useCounterStore = Pinia.defineStore(<span class="k">'counter'</span>, {
+  state: () =&gt; ({ count: 0 }),
+  getters: {
+    doubleCount: (state) =&gt; state.count * 2
+  },
+  actions: {
+    inc() { <span class="c">// 注意：直接用 this 改，没有 mutation 这一层</span>
+      this.count++
+    }
+  }
+})</pre>
+
+        <p style="font-size:14px;margin-top:16px"><b>写法二：组合式</b>（setup 风格，更自由，写起来像写组件）</p>
+        <pre>const useUserStore = Pinia.defineStore(<span class="k">'user'</span>, () =&gt; {
+  <span class="c">// 用 Vue 2.7 内置的 Composition API</span>
+  const name = <span class="k">Vue.ref</span>('海涛')
+  const isVip = <span class="k">Vue.ref</span>(true)
+  const title = <span class="k">Vue.computed</span>(() =&gt; isVip.value ? 'VIP' : '普通')
+
+  function setName(v) { name.value = v }
+
+  <span class="c">// 必须 return 出去，外面才能用</span>
+  return { name, isVip, title, setName }
+})</pre>
+        <p style="font-size:13px;color:#909399">
+          两种写法效果一样，选一种团队习惯的即可。选项式更接近 Vuex 的思维，组合式更灵活、类型提示更好。
+        </p>
+      </div>
+
+      <!-- 使用要点 -->
+      <div class="box">
+        <h2>在组件里怎么用</h2>
+        <pre><span class="c">// 1. 先安装插件、创建 pinia 实例、挂到 Vue 上</span>
+Vue.use(Pinia.PiniaVuePlugin)
+const pinia = Pinia.createPinia()
+new Vue({ el: '#app', <span class="k">pinia</span> })
+
+<span class="c">// 2. 组件里（选项式组件用 setup 选项）</span>
+Vue.component('my-comp', {
+  <span class="k">setup()</span> {
+    const counter = useCounterStore()
+    <span class="c">// ⚠️ 解构要用 storeToRefs 包一层，否则丢失响应式</span>
+    const { count, doubleCount } = <span class="k">Pinia.storeToRefs</span>(counter)
+    return { count, doubleCount, counter }
+  },
+  template: `&lt;div&gt;{{ count }} / {{ doubleCount }}&lt;/div&gt;`
+})</pre>
+        <div class="warn">
+          <b>最常见的坑：</b><br />
+          <code>const { count } = counter</code> ❌ —— 这样拿到的是一个普通数字，之后 store 变了页面不会更新。<br />
+          <code>const { count } = Pinia.storeToRefs(counter)</code> ✅ —— 保持响应式。<br />
+          （<b>actions 不需要 storeToRefs</b>，它们本来就是方法；state 和 getters 才需要。）
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         引入顺序很关键：vue.js → vue-demi.js → pinia.js
+         vue-demi 把 Vue 2.7 的 Composition API 桥接给 Pinia 使用
+         ============================================================ -->
+    <script src="../js/vue.js"></script>
+    <script src="../js/vue-demi.js"></script>
+    <script src="../js/pinia.js"></script>
+    <script>
+      // ============================================================
+      // 第 1 步：安装 Pinia 插件并创建实例
+      // ============================================================
+      // 和 Vuex 不同，Pinia 需要手动安装插件
+      Vue.use(Pinia.PiniaVuePlugin);
+      const pinia = Pinia.createPinia();
+
+      // ============================================================
+      // 第 2 步：定义 store（选项式写法）
+      // ============================================================
+      // defineStore 的第一个参数是 store 的唯一 id
+      const useCounterStore = Pinia.defineStore("counter", {
+        // state 必须是函数，返回一个对象
+        state: () => ({
+          count: 0,
+          user: { name: "海涛" },
+        }),
+
+        // getters 就是 store 里的计算属性，参数是 state
+        getters: {
+          doubleCount: (state) => state.count * 2,
+          greeting: (state) => "你好，" + state.user.name,
+        },
+
+        // actions：改数据的地方（没有 mutation 这一层了）
+        actions: {
+          inc() {
+            // 直接 this.xxx 改，Pinia 会自动追踪
+            this.count++;
+          },
+          dec() {
+            this.count--;
+          },
+        },
+      });
+
+      // ============================================================
+      // 第 3 步：两个子组件用 setup 选项使用 store
+      // ============================================================
+      Vue.component("show-panel-a", {
+        setup() {
+          // 调用 defineStore 返回的函数，拿到 store 实例
+          const counter = useCounterStore();
+          // 解构 state / getters 要用 storeToRefs 保持响应式
+          const { count, doubleCount } = Pinia.storeToRefs(counter);
+          return { count, doubleCount, counter };
+        },
+        template: `
+          <div class="comp">
+            <div class="comp-title">子组件 A</div>
+            <p style="font-size:14px">storeToRefs 解构出来的 count：</p>
+            <p class="big">{{ count }}</p>
+            <p>两倍值（getter）：<b>{{ doubleCount }}</b></p>
+            <p style="font-size:13px;color:#909399">{{ counter.greeting }}</p>
+          </div>`,
+      });
+
+      Vue.component("show-panel-b", {
+        setup() {
+          const counter = useCounterStore();
+          // 这里演示"不解构"，直接返回 store 本身
+          return { counter };
+        },
+        template: `
+          <div class="comp alt">
+            <div class="comp-title">子组件 B</div>
+            <p style="font-size:14px">直接读 counter.xxx：</p>
+            <p class="big" style="color:#409eff">{{ counter.count }}</p>
+            <p style="font-size:13px;color:#909399">
+              A、B 两个组件没有传任何 props，但读的是同一个仓库，数据天然同步。
+            </p>
+            <button @click="counter.inc()">点我 +1（A 也会跟着变）</button>
+          </div>`,
+      });
+
+      // ============================================================
+      // 第 4 步：根实例挂载 pinia
+      // ============================================================
+      new Vue({
+        el: "#app",
+        pinia, // 挂载后组件里才能用 useXxxStore()
+        setup() {
+          const counter = useCounterStore();
+          return { counter };
+        },
+      });
+    </script>
+  </body>
+</html>

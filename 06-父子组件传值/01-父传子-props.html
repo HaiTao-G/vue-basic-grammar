@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>01 - 父传子 props</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #409eff;
+      }
+      .intro {
+        background: #ecf5ff;
+        border-left: 4px solid #409eff;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      .parent-area {
+        border: 2px dashed #409eff;
+        border-radius: 8px;
+        padding: 16px;
+        background: #fafcff;
+      }
+      .child-area {
+        border: 2px dashed #67c23a;
+        border-radius: 8px;
+        padding: 14px;
+        margin-top: 12px;
+        background: #f6fdf6;
+      }
+      .tag {
+        font-size: 12px;
+        color: #fff;
+        padding: 1px 8px;
+        border-radius: 10px;
+        vertical-align: middle;
+      }
+      .tag-p {
+        background: #409eff;
+      }
+      .tag-c {
+        background: #67c23a;
+      }
+      input {
+        padding: 6px 10px;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+        margin: 4px 6px 4px 0;
+      }
+      button {
+        padding: 6px 14px;
+        margin: 4px 6px 4px 0;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: #409eff;
+        color: #409eff;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      .result {
+        color: #409eff;
+        font-weight: bold;
+      }
+      .warn {
+        background: #fef0f0;
+        border-left: 4px solid #f56c6c;
+        padding: 10px 14px;
+        border-radius: 4px;
+        font-size: 13px;
+        color: #c45656;
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <!--
+      ============================================================
+      本页演示：父组件把数据传给子组件？
+      核心只有一句话 —— 父组件在标签上写属性，子组件用 props 声明接收。
+      ============================================================
+    -->
+    <div id="app">
+      <h1>父传子：props</h1>
+      <div class="intro">
+        <b>问题：</b>子组件是独立作用域，它自己 data 里没有的数据，默认拿不到。<br />
+        <b>办法：</b>父组件在使用子组件的标签上写属性传值，子组件用 <code>props</code> 声明"我要接收哪些属性"。<br />
+        <b>口诀：</b>数据向下流。
+      </div>
+
+      <!-- ============ 父组件（这里就是根实例的模板）============ -->
+      <div class="box parent-area">
+        <h2>父组件 <span class="tag tag-p">父</span></h2>
+        <p>父组件里有两个数据：name = "{{ name }}"，age = {{ age }}</p>
+        <div>
+          改一下父组件的数据试试：
+          <input v-model="name" placeholder="改名字" />
+          <button @click="age++">年龄 +1</button>
+        </div>
+
+        <p style="font-size:13px;color:#909399;margin-bottom:4px">
+          下面两个子组件接收的是父组件的同一份数据，父变子变：
+        </p>
+
+        <!--
+          关键点 1：用 v-bind（简写 :）把父的数据"绑"到属性上。
+                  不管是字符串还是数字，只要想传"变量"，就必须加冒号。
+          关键点 2：属性名用连字符 user-name，子组件里定义成 userName（驼峰）。
+                  因为 HTML 属性名大小写不敏感。
+        -->
+        <user-card user-name="固定文本：我是写死的字符串" :age="18"></user-card>
+
+        <user-card :user-name="name" :age="age"></user-card>
+
+        <p style="font-size:13px;color:#909399;margin-top:12px">
+          说明：真实项目里子组件的模板会单独写在 .vue 文件里，
+          这里为了单文件演示，用 template 字符串写在 JS 中注册。
+        </p>
+      </div>
+
+      <div class="box">
+        <h2>重要规则：props 是只读的（单向数据流）</h2>
+        <p style="font-size:14px">
+          子组件<b>不能</b>直接修改 props。点击上面子组件里的"错误示范"按钮试试，
+          控制台会输出 Vue 的警告，而且父组件的数据并不会被改变。
+        </p>
+        <div class="warn">
+          正确做法：子组件想改，不要自己动手，而是用 <code>$emit</code> 通知父组件去改。
+          这就是下一个文件 <b>02-子传父-自定义事件.html</b> 要讲的内容。
+        </div>
+        <p style="font-size:13px;color:#909399">
+          可以按 F12 打开控制台，观察 Vue 输出的警示信息。
+        </p>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script>
+      // ========== 第 1 步：注册一个子组件 ==========
+      // 组件名用连字符 my-card / user-card，DOM 模板里大小写不敏感
+      Vue.component("user-card", {
+        // 第 2 步：用 props 声明"我准备接收哪些属性"
+        // 数组写法最简单，只声明名字；后面 03 文件会讲更完整对象写法
+        props: ["userName", "age"],
+
+        // 子组件自己的数据（和父组件无关，各管各的）
+        data() {
+          return {
+            localTip: "我是子组件自己的 data",
+          };
+        },
+
+        // 第 3 步：模板里直接当变量用，就像用自己的 data 一样
+        template: `
+          <div style="border:2px dashed #67c23a;border-radius:8px;padding:14px;margin-top:12px;background:#f6fdf6">
+            <div style="font-size:12px;color:#67c23a;font-weight:bold;margin-bottom:8px">
+              子组件 user-card
+            </div>
+            <p>收到父组件传来的 userName：<b style="color:#67c23a">{{ userName }}</b></p>
+            <p>收到父组件传来的 age：<b style="color:#67c23a">{{ age }}</b></p>
+            <p style="color:#909399;font-size:13px">{{ localTip }}</p>
+            <button @click="tryChange">在子组件里直接改 props（错误示范）</button>
+          </div>`,
+
+        methods: {
+          tryChange() {
+            // ❌ 错误示范：直接修改 props，Vue 会警告，而且父组件的数据不会被改变
+            this.userName = "我改的";
+            // ✅ 正确做法应该是：this.$emit('update-user-name', '新值')
+            alert(
+              "已尝试修改 props（无效操作）。\n请按 F12 打开控制台查看 Vue 的警告信息。",
+            );
+          },
+        },
+      });
+
+      // ========== 父组件：根实例 ==========
+      new Vue({
+        el: "#app",
+        data: {
+          name: "小明",
+          age: 18,
+        },
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>03 - props 校验与默认值</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #e6a23c;
+      }
+      .intro {
+        background: #fdf6ec;
+        border-left: 4px solid #e6a23c;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      .card-demo {
+        border: 2px dashed #e6a23c;
+        border-radius: 8px;
+        padding: 14px;
+        margin: 10px 0;
+        background: #fffcf7;
+      }
+      .child-title {
+        font-size: 12px;
+        color: #e6a23c;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      pre {
+        background: #1e1e1e;
+        color: #dcdcdc;
+        padding: 14px;
+        border-radius: 6px;
+        overflow: auto;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      pre .k {
+        color: #7ec699;
+      }
+      pre .c {
+        color: #888;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid #ebeef5;
+        padding: 8px 10px;
+        text-align: left;
+      }
+      th {
+        background: #fafafa;
+      }
+      .result {
+        color: #e6a23c;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>props 校验与默认值</h1>
+      <div class="intro">
+        前面用数组写 props 只能声明"名字"。真正写项目时，要用<b>对象写法</b>给每个 prop 加上
+        类型、是否必填、默认值等约束，这样传错了 Vue 会在控制台提醒你。<br />
+        <b>建议现在就养成用对象写法的习惯。</b>
+      </div>
+
+      <div class="box">
+        <h2>完整的 props 写法长这样</h2>
+        <pre>
+props: {
+  <span class="c">// 基础类型校验 + 必填</span>
+  title:   { <span class="k">type</span>: String, <span class="k">required</span>: true },
+
+  <span class="c">// 默认值</span>
+  likes:   { <span class="k">type</span>: Number, <span class="k">default</span>: 0 },
+
+  <span class="c">// ⚠️ 对象/数组的默认值必须写成函数！</span>
+  tags:    { <span class="k">type</span>: Array,  <span class="k">default</span>: () => [] },
+
+  <span class="c">// 自定义校验器：返回值是 false 就报警告</span>
+  status:  { <span class="k">type</span>: String, <span class="k">default</span>: "normal",
+             <span class="k">validator</span>: (v) => ["normal", "vip"].includes(v) }
+}</pre>
+        <table style="margin-top:12px">
+          <tr>
+            <th>选项</th>
+            <th>作用</th>
+          </tr>
+          <tr>
+            <td><code>type</code></td>
+            <td>规定类型：String / Number / Boolean / Array / Object / Function</td>
+          </tr>
+          <tr>
+            <td><code>required</code></td>
+            <td>是否必填，没传会报警告</td>
+          </tr>
+          <tr>
+            <td><code>default</code></td>
+            <td>没传时的默认值（对象/数组必须用函数返回）</td>
+          </tr>
+          <tr>
+            <td><code>validator</code></td>
+            <td>自定义校验函数，返回 false 触发警告</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="box">
+        <h2>看效果：三个实例，传参各不相同</h2>
+
+        <!-- ✅ 全部按规矩传 -->
+        <info-card
+          title="正常传参的卡片"
+          :likes="128"
+          :tags="['Vue', '前端']"
+          status="vip"
+        ></info-card>
+
+        <!-- ❌ likes 应该传数字，这里传了字符串 'abc' -->
+        <info-card
+          title="likes 传错类型（看控制台警告）"
+          likes="abc"
+          :tags="['会触发警告']"
+        ></info-card>
+
+        <!-- ❌ status 不在允许范围内；同时没传 likes，走默认值 0 -->
+        <info-card title="status 值非法、likes 缺省" status="unknown"></info-card>
+
+        <p style="font-size:14px;margin-top:14px">
+          请按 <b>F12 打开控制台</b>，能看到类似这样的提示：
+        </p>
+        <pre>
+[Vue warn]: Invalid prop: type check failed for prop "likes". Expected Number, got String.
+[Vue warn]: Invalid prop: custom validator check failed for prop "status".</pre>
+        <p style="font-size:13px;color:#909399">
+          注意：校验<b>只在开发环境提醒，不会阻断代码运行</b>——页面照常渲染，
+          所以很多人忽略了控制台的黄色警告。养成看控制台的习惯。
+        </p>
+      </div>
+
+      <div class="box">
+        <h2>重点提醒：对象 / 数组的 default 必须用函数</h2>
+        <div style="display:flex;gap:20px;flex-wrap:wrap">
+          <div style="flex:1;min-width:260px">
+            <p style="color:#f56c6c;font-weight:bold;font-size:14px">❌ 错误写法</p>
+            <pre>tags: { type: Array, <span class="k">default</span>: [] }</pre>
+            <p style="font-size:13px">
+              所有使用该组件的实例会<b>共享同一个数组</b>，一个地方 push，别的地方也变了。
+            </p>
+          </div>
+          <div style="flex:1;min-width:260px">
+            <p style="color:#67c23a;font-weight:bold;font-size:14px">✅ 正确写法</p>
+            <pre>tags: { type: Array, <span class="k">default</span>: () => [] }</pre>
+            <p style="font-size:13px">
+              每次创建实例都<b>调用函数拿到新数组</b>，实例之间互不影响。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script>
+      Vue.component("info-card", {
+        // 对象写法：每个 prop 都能加约束
+        props: {
+          title: { type: String, required: true },
+          likes: { type: Number, default: 0 },
+          // 数组默认值必须用函数返回
+          tags: { type: Array, default: () => [] },
+          status: {
+            type: String,
+            default: "normal",
+            // 自定义校验：只允许 normal 或 vip
+            validator(value) {
+              return ["normal", "vip"].indexOf(value) !== -1;
+            },
+          },
+        },
+        computed: {
+          statusText() {
+            return this.status === "vip" ? "VIP 会员" : "普通用户";
+          },
+          statusColor() {
+            return this.status === "vip" ? "#e6a23c" : "#909399";
+          },
+        },
+        template: `
+          <div class="card-demo">
+            <div class="child-title">子组件 info-card</div>
+            <p style="margin:4px 0"><b>{{ title }}</b></p>
+            <p style="margin:4px 0;font-size:14px">
+              点赞数：<span style="color:#e6a23c">{{ likes }}</span>
+              （没传时走默认值 0）
+            </p>
+            <p style="margin:4px 0;font-size:14px">
+              状态：<span :style="{color: statusColor}">{{ statusText }}</span>
+            </p>
+            <p style="margin:4px 0;font-size:14px">
+              标签：
+              <span v-for="(t, i) in tags" :key="i"
+                    style="background:#f0f2f5;border-radius:10px;padding:1px 10px;margin-right:6px;font-size:12px">
+                {{ t }}
+              </span>
+              <span v-if="!tags.length" style="color:#c0c4cc">（未传，默认空数组）</span>
+            </p>
+          </div>`,
+      });
+
+      new Vue({ el: "#app" });
+    </script>
+  </body>
+</html>

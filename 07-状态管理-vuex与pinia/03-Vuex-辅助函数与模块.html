@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>03 - Vuex 辅助函数与模块</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #41b883;
+      }
+      .intro {
+        background: #f0f9eb;
+        border-left: 4px solid #41b883;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      button {
+        padding: 6px 14px;
+        margin: 4px 8px 4px 0;
+        border: 1px solid #dcdfe6;
+        background: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        border-color: #41b883;
+        color: #41b883;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #d6336c;
+        font-size: 13px;
+      }
+      pre {
+        background: #1e1e1e;
+        color: #dcdcdc;
+        padding: 14px;
+        border-radius: 6px;
+        overflow: auto;
+        font-size: 13px;
+        line-height: 1.7;
+        margin: 8px 0;
+      }
+      pre .c {
+        color: #888;
+      }
+      pre .k {
+        color: #7ec699;
+      }
+      .comp {
+        border: 2px dashed #41b883;
+        border-radius: 8px;
+        padding: 14px;
+        background: #f6fdf9;
+      }
+      .comp-title {
+        font-size: 12px;
+        font-weight: bold;
+        color: #41b883;
+        margin-bottom: 8px;
+      }
+      .item {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px dashed #ebeef5;
+      }
+      .item:last-child {
+        border-bottom: none;
+      }
+      .total {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 2px solid #ebeef5;
+        font-size: 15px;
+      }
+      .total b {
+        color: #f56c6c;
+        font-size: 18px;
+      }
+      .empty {
+        color: #c0c4cc;
+        font-size: 14px;
+        text-align: center;
+        padding: 14px 0;
+      }
+      .root-area {
+        background: #f7fbff;
+        border: 2px dashed #409eff;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 14px;
+      }
+      .root-area .comp-title {
+        color: #409eff;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      th,
+      td {
+        border: 1px solid #ebeef5;
+        padding: 8px 10px;
+        text-align: left;
+      }
+      th {
+        background: #fafafa;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>Vuex 辅助函数与模块化</h1>
+      <div class="intro">
+        <b>问题 1：</b>每次都要写 <code>this.$store.state.xxx</code>、<code>this.$store.commit('XXX')</code> 太啰嗦。<br />
+        <b>解决：</b>用 <code>mapState</code> / <code>mapGetters</code> / <code>mapMutations</code> /
+        <code>mapActions</code> 把它们直接映射成组件的计算属性和方法。<br />
+        <b>问题 2：</b>所有数据塞在一个 store 里，项目一大就乱了。<br />
+        <b>解决：</b>拆成 <code>modules</code>（模块），每个模块管自己的一块。
+      </div>
+
+      <!-- ============ 根 store 的数据（演示辅助函数基础用法）============ -->
+      <div class="box root-area">
+        <div class="comp-title">根 store（演示 mapState / mapGetters / mapMutations）</div>
+        <p>
+          用户名（mapState）：<b>{{ userName }}</b>
+          ｜ 问候语（mapGetters）：<b>{{ welcome }}</b>
+          ｜ 购物车件数（根 getters 读模块 state）：<b>{{ cartCount }}</b>
+        </p>
+        <button @click="renameUser">mapMutations 映射的 SET_USER_NAME（改名 + 顺便往 cart 模块加一件）</button>
+        <p style="font-size:13px;color:#909399">
+          上面这个按钮调用的是 <code>...Vuex.mapMutations(['SET_USER_NAME'])</code> 映射出来的方法，
+          写起来就像调用本地方法一样，看不到 <code>$store</code>。
+        </p>
+      </div>
+
+      <!-- ============ 模块演示 ============ -->
+      <div class="box">
+        <h2>模块化的购物车模块（cart，带命名空间）</h2>
+        <cart-view></cart-view>
+      </div>
+
+      <!-- ============ 代码说明 ============ -->
+      <div class="box">
+        <h2>辅助函数怎么用</h2>
+        <pre>
+<span class="c">// 写法一：数组，名字和 store 里一致</span>
+computed: {
+  <span class="k">...Vuex.mapState</span>(['userName']),
+  <span class="k">...Vuex.mapGetters</span>(['itemCount', 'totalPrice'])
+},
+methods: {
+  <span class="k">...Vuex.mapMutations</span>(['ADD_ITEM']),
+  <span class="k">...Vuex.mapActions</span>(['addItemAsync'])
+}
+
+<span class="c">// 写法二：对象，可以顺便改名</span>
+computed: {
+  <span class="k">...Vuex.mapState</span>({
+    name: 'userName',        <span class="c">// this.name 就是 store 里的 userName</span>
+    count: 'itemCount'
+  })
+}</pre>
+
+        <p style="font-size:14px;margin-top:14px"><b>模块 + 命名空间怎么用：</b></p>
+        <pre>
+<span class="c">// 1. 定义模块时加上 namespaced: true</span>
+const cart = {
+  <span class="k">namespaced: true</span>,
+  state: { items: [] },
+  getters: { total: state =&gt; ... },
+  mutations: { ADD(state, item) {...} },
+  actions: { addAsync({ commit }, item) {...} }
+}
+
+<span class="c">// 2. 注册到 store 的 modules 里</span>
+new Vuex.Store({ modules: { cart } })
+
+<span class="c">// 3. 组件里用 createNamespacedHelpers 生成带前缀的辅助函数</span>
+const helpers = <span class="k">Vuex.createNamespacedHelpers('cart')</span>
+computed: {
+  ...helpers.mapState(['items']),
+  ...helpers.mapGetters(['total'])
+}
+<span class="c">// 不加命名空间的调用方式（对比）：</span>
+<span class="c">// this.$store.commit('cart/ADD', item)   注意有 cart/ 前缀</span></pre>
+
+        <table style="margin-top:14px">
+          <tr>
+            <th>辅助函数</th>
+            <th>映射到</th>
+            <th>原来要写</th>
+          </tr>
+          <tr>
+            <td><code>mapState</code></td>
+            <td>computed</td>
+            <td><code>this.$store.state.x</code></td>
+          </tr>
+          <tr>
+            <td><code>mapGetters</code></td>
+            <td>computed</td>
+            <td><code>this.$store.getters.x</code></td>
+          </tr>
+          <tr>
+            <td><code>mapMutations</code></td>
+            <td>methods</td>
+            <td><code>this.$store.commit('X')</code></td>
+          </tr>
+          <tr>
+            <td><code>mapActions</code></td>
+            <td>methods</td>
+            <td><code>this.$store.dispatch('X')</code></td>
+          </tr>
+        </table>
+        <p style="font-size:13px;color:#909399;margin-top:12px">
+          记法：<b>state / getters 映射成 computed</b>（因为它们是"读值"），
+          <b>mutations / actions 映射成 methods</b>（因为它们是"执行动作"）。
+        </p>
+      </div>
+    </div>
+
+    <script src="../js/vue.js"></script>
+    <script src="../js/vuex.js"></script>
+    <script>
+      // ============================================================
+      // 定义 cart 模块（带命名空间）
+      // ============================================================
+      const cartModule = {
+        // namespaced: true 让这个模块的 mutation/action/getter 都带上 cart/ 前缀，避免命名冲突
+        namespaced: true,
+
+        state: {
+          items: [],
+        },
+
+        getters: {
+          total(state) {
+            return state.items.reduce((sum, i) => sum + i.price, 0);
+          },
+          count(state) {
+            return state.items.length;
+          },
+        },
+
+        mutations: {
+          ADD(state, item) {
+            state.items.push(item);
+          },
+          REMOVE(state, index) {
+            state.items.splice(index, 1);
+          },
+        },
+
+        actions: {
+          // 异步添加（模拟延迟）
+          addAsync({ commit }, item) {
+            setTimeout(() => {
+              commit("ADD", item);
+            }, 600);
+          },
+        },
+      };
+
+      // ============================================================
+      // 根 store：state + 上面注册进来的 cart 模块
+      // ============================================================
+      const store = new Vuex.Store({
+        state: {
+          userName: "海涛",
+        },
+        getters: {
+          welcome(state) {
+            return "欢迎，" + state.userName;
+          },
+          // 模块的 state 会挂在根 state 的模块名下，所以 state.cart 能读到模块里的数据
+          cartCount(state) {
+            return state.cart.items.length;
+          },
+        },
+        mutations: {
+          SET_USER_NAME(state, name) {
+            state.userName = name;
+          },
+        },
+        // 注册模块
+        modules: {
+          cart: cartModule,
+        },
+      });
+
+      // ============================================================
+      // 生成"带 cart 前缀"的辅助函数
+      // ============================================================
+      // 调用 createNamespacedHelpers 后拿到的 mapState / mapGetters 等，
+      // 会自动把路径写成 'cart/xxx'，组件里就不用自己拼前缀了
+      const cartHelpers = Vuex.createNamespacedHelpers("cart");
+
+      Vue.component("cart-view", {
+        // setup 之外，也可以用 data 放本地的"待添加商品"
+        data() {
+          return {
+            goods: [
+              { name: "键盘", price: 599 },
+              { name: "鼠标", price: 129 },
+              { name: "显示器", price: 1299 },
+            ],
+          };
+        },
+        computed: {
+          // ===== 从 cart 模块映射 state 和 getters（会变成 computed）=====
+          ...cartHelpers.mapState(["items"]),
+          ...cartHelpers.mapGetters(["total", "count"]),
+
+          // 也可以和本地计算属性混着写，不冲突
+          itemText() {
+            return this.count ? "共 " + this.count + " 件商品" : "购物车是空的";
+          },
+        },
+        methods: {
+          // ===== 从 cart 模块映射 mutations 和 actions（会变成 methods）=====
+          ...cartHelpers.mapMutations(["REMOVE"]),
+          ...cartHelpers.mapActions(["addAsync"]),
+
+          // 同步添加（用 commit 的完整写法，方便对比）
+          addSync(item) {
+            // 带命名空间的模块，commit 时要写 'cart/ADD'
+            this.$store.commit("cart/ADD", item);
+          },
+        },
+        template: `
+          <div class="comp">
+            <div class="comp-title">子组件 cart-view（使用 cart 模块）</div>
+
+            <div v-if="!items.length" class="empty">购物车是空的，点下面的按钮加商品</div>
+
+            <div v-for="(item, index) in items" :key="index" class="item">
+              <span>{{ item.name }} —— ¥{{ item.price }}</span>
+              <button @click="REMOVE(index)">删除</button>
+            </div>
+
+            <div v-if="items.length" class="total">
+              {{ itemText }}，合计：<b>¥{{ total }}</b>
+            </div>
+
+            <p style="margin-top:14px;font-size:14px">添加商品：</p>
+            <button v-for="(g, i) in goods" :key="i" @click="addSync(g)">
+              addSync（同步）{{ g.name }}
+            </button>
+            <button @click="addAsync({ name: '异步商品', price: 88 })">
+              addAsync（延迟 0.6 秒）
+            </button>
+
+            <p style="font-size:13px;color:#909399;margin-top:10px">
+              上面用的是 mapMutations / mapActions 映射出来的方法，
+              调用方式和普通方法完全一样，看不到 $store 的踪影。
+            </p>
+          </div>`,
+      });
+
+      // ============================================================
+      // 根实例：演示不带命名空间的辅助函数
+      // ============================================================
+      new Vue({
+        el: "#app",
+        store,
+        computed: {
+          // state / getters 映射成 computed
+          ...Vuex.mapState(["userName"]),
+          ...Vuex.mapGetters(["welcome", "cartCount"]),
+        },
+        methods: {
+          // mutations / actions 映射成 methods
+          ...Vuex.mapMutations(["SET_USER_NAME"]),
+          renameUser() {
+            // 映射后直接当方法调用，不用写 this.$store.commit
+            this.SET_USER_NAME(this.userName === "海涛" ? "小明" : "海涛");
+            // 对照一下"不映射"的完整写法：带命名空间的模块要写 'cart/ADD' 前缀
+            this.$store.commit("cart/ADD", { name: "快捷商品", price: 10 });
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
