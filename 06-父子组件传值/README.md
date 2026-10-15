@@ -11,6 +11,19 @@
 | 运行方式 | 双击 HTML 直接打开即可，无需服务器                   |
 | 前置知识 | 熟悉 `data`、`v-bind`、`v-on`、`v-model`（见 02、03 章） |
 
+> ### 另有一份「脚手架版」（真实 vue-cli 工程）
+>
+> 下面的 HTML 文件用来**理解概念**；真实项目是 vue-cli 工程，已放在
+> **`脚手架项目-components-demo/`**（依赖已装好，直接跑）：
+>
+> ```bash
+> cd 脚手架项目-components-demo
+> npm run serve     # 打开 http://localhost:5174
+> ```
+>
+> 和 HTML 版最大的区别：组件拆成独立 `.vue` 文件、用 `components` 局部注册、
+> 组件名可以写 **`PascalCase`**（HTML 版必须写 kebab-case）。详见该目录下的 `README.md`。
+
 ## 二、文件清单（建议按顺序学）
 
 | 文件                                  | 内容                                     | 关键知识点                                        |
