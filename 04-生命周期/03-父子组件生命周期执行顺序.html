@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>03 - 父子组件生命周期执行顺序</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #409eff;
+      }
+      .intro {
+        background: #ecf5ff;
+        border-left: 4px solid #409eff;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      button {
+        background: #409eff;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        margin-right: 8px;
+        transition: 0.2s;
+      }
+      button:hover {
+        background: #66b1ff;
+      }
+      button.danger {
+        background: #f56c6c;
+      }
+      button.danger:hover {
+        background: #f78989;
+      }
+      button.warning {
+        background: #e6a23c;
+      }
+      button.warning:hover {
+        background: #ebb563;
+      }
+      .timeline-box {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        border-radius: 6px;
+        padding: 16px;
+        font-family: Consolas, monospace;
+        font-size: 13px;
+        max-height: 320px;
+        overflow-y: auto;
+        margin-top: 14px;
+      }
+      .timeline-item {
+        margin: 6px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .badge-parent {
+        background: #409eff;
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+      }
+      .badge-child {
+        background: #67c23a;
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+      }
+      .arrow {
+        color: #e6a23c;
+        font-weight: bold;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-top: 10px;
+      }
+      th, td {
+        border: 1px solid #ebeef5;
+        padding: 9px 12px;
+        text-align: left;
+      }
+      th {
+        background: #f5f7fa;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #e65d6e;
+        font-family: Consolas, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>03 - 父子组件生命周期执行顺序（面试高频）</h1>
+
+      <div class="intro">
+        <b>💡 面试经典必问：</b>“父子组件在【挂载】、【更新】、【销毁】时的生命周期触发次序是怎样的？为什么？”<br />
+        记住最核心的一句口诀：<strong>“先父后子创建，先子后父挂载；先父后子更新，先子后父完成；先父后子销毁，先子后父结束。”</strong>
+      </div>
+
+      <!-- 交互演示区 -->
+      <div class="box">
+        <h2>✨ 交互测试与时序追踪台</h2>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button @click="updateChildData">🔄 修改传递给子组件的 prop (触发更新)</button>
+          <button class="danger" @click="showChild = !showChild">
+            {{ showChild ? '❌ 卸载子组件 (触发销毁)' : '✅ 挂载子组件 (触发创建挂载)' }}
+          </button>
+          <button class="warning" @click="clearLogs">🧹 清空时序记录</button>
+        </div>
+
+        <div style="margin-top: 12px;" v-if="showChild">
+          <child-view :msg="parentMsg"></child-view>
+        </div>
+
+        <h3 style="font-size: 14px; margin: 16px 0 6px;">
+          ⏱️ 实时时序轨迹追踪（从上到下按时间先后触发）：
+        </h3>
+        <!-- 原生 DOM 时序日志容器，避免触发 Vue 响应式二次更新 -->
+        <div class="timeline-box" id="timeline-panel"></div>
+      </div>
+
+      <!-- 顺序记忆对比表 -->
+      <div class="box">
+        <h2>📖 父子组件生命周期完整时序口诀表</h2>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 20%;">生命阶段</th>
+              <th style="width: 45%;">执行时序链条</th>
+              <th style="width: 35%;">为什么是这个顺序？</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>1. 初次挂载流程</b></td>
+              <td>
+                <code>父 beforeCreate</code> ➜ <code>父 created</code> ➜ <code>父 beforeMount</code><br />
+                ➜ <code>子 beforeCreate</code> ➜ <code>子 created</code> ➜ <code>子 beforeMount</code> ➜ <code>子 mounted</code><br />
+                ➜ <code>父 mounted</code>
+              </td>
+              <td>父组件要把自己挂载到真实 DOM 之前，必须先递归渲染完毕它的全部子组件！</td>
+            </tr>
+            <tr>
+              <td><b>2. 父传子属性更新</b></td>
+              <td>
+                <code>父 beforeUpdate</code> ➜ <code>子 beforeUpdate</code> ➜ <code>子 updated</code> ➜ <code>父 updated</code>
+              </td>
+              <td>父级触发更新，把新 props 灌入子组件，子组件先完成 DOM 重新渲染，父组件最后打补丁收尾。</td>
+            </tr>
+            <tr>
+              <td><b>3. 组件卸载/销毁</b></td>
+              <td>
+                <code>父 beforeDestroy</code> ➜ <code>子 beforeDestroy</code> ➜ <code>子 destroyed</code> ➜ <code>父 destroyed</code>
+              </td>
+              <td>父组件销毁前先准备，再自上而下销毁所有子组件实例，释放子级资源，最后父级完成销毁。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 引入 Vue 2.7 -->
+    <script src="../js/vue.js"></script>
+    <script>
+      let logIndex = 0;
+
+      function appendTimeline(role, hook, desc) {
+        logIndex++;
+        const panel = document.getElementById("timeline-panel");
+        console.log(`[#${logIndex}] ${role} -> ${hook} (${desc})`);
+
+        if (panel) {
+          const item = document.createElement("div");
+          item.className = "timeline-item";
+          const badgeClass = role === "父组件" ? "badge-parent" : "badge-child";
+          item.innerHTML = `
+            <span style="color: #888; width: 30px;">#${logIndex}</span>
+            <span class="${badgeClass}">${role}</span>
+            <span class="arrow">➜</span>
+            <span style="color: #4ec9b0; font-weight: bold;">${hook}</span>
+            <span style="color: #888; font-size: 12px;">(${desc})</span>
+          `;
+          panel.appendChild(item);
+          panel.scrollTop = panel.scrollHeight;
+        }
+      }
+
+      // 子组件
+      Vue.component("child-view", {
+        props: ["msg"],
+        template: `
+          <div style="border: 2px dashed #67c23a; border-radius: 6px; padding: 14px; background: #f6ffed;">
+            <div style="font-weight: bold; color: #52c41a; margin-bottom: 6px;">[子组件 child-view]</div>
+            <div>接收父组件 prop: <b style="color: #409eff;">{{ msg }}</b></div>
+          </div>
+        `,
+        beforeCreate() {
+          appendTimeline("子组件", "beforeCreate", "子实例初始化");
+        },
+        created() {
+          appendTimeline("子组件", "created", "子数据已就绪");
+        },
+        beforeMount() {
+          appendTimeline("子组件", "beforeMount", "子虚拟 DOM 准备挂载");
+        },
+        mounted() {
+          appendTimeline("子组件", "mounted", "子真实 DOM 渲染完毕");
+        },
+        beforeUpdate() {
+          appendTimeline("子组件", "beforeUpdate", "子检测到 prop 变化");
+        },
+        updated() {
+          appendTimeline("子组件", "updated", "子组件 DOM 更新完毕");
+        },
+        beforeDestroy() {
+          appendTimeline("子组件", "beforeDestroy", "子组件即将销毁");
+        },
+        destroyed() {
+          appendTimeline("子组件", "destroyed", "子组件销毁完成");
+        },
+      });
+
+      // 父组件（根实例）
+      new Vue({
+        el: "#app",
+        data: {
+          parentMsg: "初始标题 v1.0",
+          showChild: true,
+        },
+        beforeCreate() {
+          appendTimeline("父组件", "beforeCreate", "父实例初始化");
+        },
+        created() {
+          appendTimeline("父组件", "created", "父数据已就绪");
+        },
+        beforeMount() {
+          appendTimeline("父组件", "beforeMount", "父准备挂载 DOM");
+        },
+        mounted() {
+          appendTimeline("父组件", "mounted", "父真实 DOM 挂载完毕（全部子就绪）");
+        },
+        beforeUpdate() {
+          appendTimeline("父组件", "beforeUpdate", "父响应式数据更新");
+        },
+        updated() {
+          appendTimeline("父组件", "updated", "父 DOM 更新完毕");
+        },
+        methods: {
+          updateChildData() {
+            this.parentMsg = "更新后的标题 v" + (Math.random() * 10).toFixed(1);
+          },
+          clearLogs() {
+            logIndex = 0;
+            const panel = document.getElementById("timeline-panel");
+            if (panel) panel.innerHTML = "";
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

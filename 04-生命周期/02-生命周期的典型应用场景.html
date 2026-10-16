@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>02 - 生命周期的典型应用场景实战</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #409eff;
+      }
+      .intro {
+        background: #ecf5ff;
+        border-left: 4px solid #409eff;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+      }
+      .card {
+        border: 1px solid #e4e7ed;
+        border-radius: 6px;
+        padding: 16px;
+        background: #fafafa;
+      }
+      button {
+        background: #409eff;
+        color: #fff;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: 0.2s;
+        margin-right: 6px;
+      }
+      button:hover {
+        background: #66b1ff;
+      }
+      button.danger {
+        background: #f56c6c;
+      }
+      button.danger:hover {
+        background: #f78989;
+      }
+      button.success {
+        background: #67c23a;
+      }
+      button.success:hover {
+        background: #85ce61;
+      }
+      .loading {
+        color: #e6a23c;
+        font-size: 13px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-top: 10px;
+      }
+      th, td {
+        border: 1px solid #ebeef5;
+        padding: 8px 12px;
+        text-align: left;
+      }
+      th {
+        background: #f5f7fa;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #e65d6e;
+        font-family: Consolas, monospace;
+      }
+      .timer-badge {
+        font-size: 16px;
+        font-weight: bold;
+        color: #e6a23c;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>02 - 生命周期的 3 大核心实战应用场景</h1>
+
+      <div class="intro">
+        <b>💡 很多初学者的疑问：</b>“生命周期钩子函数到底在什么时候用？”<br />
+        日常业务开发中，超过 80% 的生命周期代码集中在三个钩子：
+        <br />1. <b><code>created</code></b>：发起 Ajax 异步请求，初始化数据
+        <br />2. <b><code>mounted</code></b>：访问真实 DOM，挂载图表、富文本、原生插件
+        <br />3. <b><code>beforeDestroy</code></b>：释放资源、销毁定时器、解绑全局事件监听器
+      </div>
+
+      <div class="grid">
+        <!-- 场景 1：created 发请求 -->
+        <div class="box">
+          <h2>1. created：异步请求与数据预加载</h2>
+          <p style="font-size: 13px; color: #606266;">
+            数据最早在 <code>created</code> 时就可以访问，此时尽快发起接口请求可以显著缩短白屏等待时长：
+          </p>
+          <div style="margin: 10px 0;">
+            <button @click="loadData">手动重新刷新数据</button>
+            <span v-if="loading" class="loading">⏳ 数据加载中...</span>
+          </div>
+          <ul style="font-size: 13px; padding-left: 20px;">
+            <li v-for="item in articleList" :key="item.id">
+              {{ item.title }} <span style="color: #909399;">(阅读: {{ item.views }})</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- 场景 2：mounted 操控 DOM / Canvas -->
+        <div class="box">
+          <h2>2. mounted：操作真实 DOM 与图表渲染</h2>
+          <p style="font-size: 13px; color: #606266;">
+            操作 DOM（如 Canvas 绘图、Echarts、获取元素高宽）必须在 <code>mounted</code> 之后，否则由于 DOM 未挂载会报错 <code>null</code>：
+          </p>
+          <!-- 动态 Canvas 元素 -->
+          <canvas id="myCanvas" width="280" height="90" style="border: 1px solid #dcdfe6; border-radius: 4px; background: #fff;"></canvas>
+          <div style="margin-top: 8px;">
+            <button class="success" @click="drawCanvas">重绘 Canvas 进度条</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 场景 3：beforeDestroy 清理副作用与防内存泄漏 -->
+      <div class="box">
+        <h2>3. beforeDestroy：清理定时器与解除全局监听（防内存泄漏）</h2>
+        <p style="font-size: 14px; color: #606266;">
+          点击下方按钮销毁/挂载子组件，观察子组件内部创建的 <code>setInterval</code> 定时器是否在 <code>beforeDestroy</code> 中被妥善清理：
+        </p>
+        <button class="danger" @click="showChild = !showChild">
+          {{ showChild ? '销毁子组件 (测试清理钩子)' : '重新挂载子组件' }}
+        </button>
+
+        <div style="margin-top: 12px;" v-if="showChild">
+          <timer-box></timer-box>
+        </div>
+      </div>
+
+      <!-- 面试对比表 -->
+      <div class="box">
+        <h2>📖 经典面试题：created 和 mounted 发送网络请求到底有什么区别？</h2>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 20%;">钩子</th>
+              <th style="width: 40%;">优势与特点</th>
+              <th style="width: 40%;">适用情况</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>created</b>（通常推荐）</td>
+              <td>
+                • 能更快发出请求，减少页面数据加载白屏时间<br />
+                • 在服务端渲染 (SSR) 中，<code>created</code> 支持执行（而 <code>mounted</code> 在 SSR 下不会执行）
+              </td>
+              <td>绝大多数纯数据渲染、页面列表数据初始化。</td>
+            </tr>
+            <tr>
+              <td><b>mounted</b></td>
+              <td>
+                • 保证真实 DOM 已经就绪，不会报 DOM 不存在的错误<br />
+                • 如果接口请求的入参需要先获取某些 DOM 尺寸，则必须在 mounted
+              </td>
+              <td>初始化图表（Echarts、Highcharts）、Swiper 轮播图、或者需要获取 DOM 节点参数时。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 引入 Vue 2.7 -->
+    <script src="../js/vue.js"></script>
+    <script>
+      // 注册用于演示定时器与清理的子组件 timer-box
+      Vue.component("timer-box", {
+        data() {
+          return {
+            seconds: 0,
+            timerId: null,
+          };
+        },
+        template: `
+          <div style="border: 2px dashed #e6a23c; border-radius: 6px; padding: 14px; background: #fffbe6;">
+            <div style="font-size: 13px; font-weight: bold; color: #d48806; margin-bottom: 6px;">
+              ⏱️ 定时器子组件 (timer-box)
+            </div>
+            <p style="margin: 0; font-size: 14px;">
+              子组件存活时间计时：<span class="timer-badge">{{ seconds }}</span> 秒
+            </p>
+            <p style="font-size: 12px; color: #8c8c8c; margin: 4px 0 0;">
+              打开浏览器控制台 F12，销毁该组件时会输出 <code>beforeDestroy 清除定时器</code>。若不清除，定时器将永久在后台占用 CPU！
+            </p>
+          </div>
+        `,
+        created() {
+          // 在组件创建时启动定时器
+          this.timerId = setInterval(() => {
+            this.seconds++;
+            console.log(`[子组件定时器心跳] 运行中: ${this.seconds}s`);
+          }, 1000);
+        },
+        beforeDestroy() {
+          // 关键点：在实例销毁前，彻底清理计时器
+          if (this.timerId) {
+            clearInterval(this.timerId);
+            this.timerId = null;
+            console.log("✅ [beforeDestroy 钩子] 定时器已成功销毁，无内存泄漏！");
+          }
+        },
+      });
+
+      // 根实例
+      new Vue({
+        el: "#app",
+        data: {
+          loading: false,
+          articleList: [],
+          showChild: true,
+        },
+        // 场景 1：created 中发起数据请求
+        created() {
+          this.loadData();
+        },
+        // 场景 2：mounted 中操作真实 DOM 绘制图形
+        mounted() {
+          this.drawCanvas();
+        },
+        methods: {
+          loadData() {
+            this.loading = true;
+            this.articleList = [];
+            // 模拟 400ms 异步接口延迟
+            setTimeout(() => {
+              this.articleList = [
+                { id: 1, title: "深入浅出 Vue 响应式原理", views: 3200 },
+                { id: 2, title: "Vue Router 3 路由传参与守卫最佳实践", views: 2450 },
+                { id: 3, title: "Vue 状态管理从 Vuex 平滑迁移至 Pinia", views: 1890 },
+              ];
+              this.loading = false;
+            }, 400);
+          },
+          drawCanvas() {
+            const canvas = document.getElementById("myCanvas");
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 画背景底槽
+            ctx.fillStyle = "#ebeef5";
+            ctx.fillRect(20, 30, 240, 20);
+
+            // 画进度填充
+            const gradient = ctx.createLinearGradient(20, 0, 260, 0);
+            gradient.addColorStop(0, "#409eff");
+            gradient.addColorStop(1, "#67c23a");
+            ctx.fillStyle = gradient;
+            ctx.fillRect(20, 30, 180, 20);
+
+            // 文字
+            ctx.fillStyle = "#606266";
+            ctx.font = "12px Microsoft YaHei";
+            ctx.fillText("mounted 已就绪 - 渲染进度: 75%", 20, 70);
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

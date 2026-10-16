@@ -42,3 +42,6 @@ Vue 2 基础语法练习集，按章节编号组织，用于学习/复习 Vue 2 
 - `v-slot` 只能写在 `<template>` 上（独占默认插槽除外），且插槽内容处于父级编译作用域中。
 - 自定义指令操作真实 DOM（如 `focus()`）必须在 `inserted` 钩子而非 `bind` 钩子中执行；全局监听必须在 `unbind` 中清理。
 - Mixin 的生命周期钩子先于组件自身执行且都会执行；data/methods 冲突时组件自身优先级更高。
+- 生命周期函数中操作 DOM 必须在 `mounted`（在 `created` 中操作真实 DOM 会是 null）；修改数据后想获取最新 DOM 必须使用 `$nextTick`。
+- 子组件挂载完成先于父组件挂载（先子后父挂载），因此父组件 `mounted` 时所有子组件必定已挂载就绪。
+- 定时器 `setInterval` 与 `window` 监听器必须在 `beforeDestroy` 中销毁注销，否则会产生隐蔽的内存泄漏。
