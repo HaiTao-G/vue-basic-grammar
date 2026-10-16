@@ -39,3 +39,6 @@ Vue 2 基础语法练习集，按章节编号组织，用于学习/复习 Vue 2 
 - `vue-router` 3 的 `to.meta` 不继承父级 meta，嵌套路由下判断权限要用 `to.matched.some(r => r.meta.requiresAuth)`。
 - 守卫首次导航时 Vue 根实例尚未挂载完，守卫中访问 `app.xxx` 要判空。
 - Pinia 从 store 解构 state/getters 必须用 `storeToRefs`，否则丢响应式。
+- `v-slot` 只能写在 `<template>` 上（独占默认插槽除外），且插槽内容处于父级编译作用域中。
+- 自定义指令操作真实 DOM（如 `focus()`）必须在 `inserted` 钩子而非 `bind` 钩子中执行；全局监听必须在 `unbind` 中清理。
+- Mixin 的生命周期钩子先于组件自身执行且都会执行；data/methods 冲突时组件自身优先级更高。

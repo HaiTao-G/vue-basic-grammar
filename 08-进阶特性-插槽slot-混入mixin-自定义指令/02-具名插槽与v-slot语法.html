@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>02 - 具名插槽与 v-slot 语法</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #409eff;
+      }
+      .intro {
+        background: #ecf5ff;
+        border-left: 4px solid #409eff;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      .card-wrapper {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .card-item {
+        flex: 1;
+        min-width: 300px;
+      }
+      button {
+        background: #409eff;
+        color: #fff;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: 0.2s;
+      }
+      button:hover {
+        background: #66b1ff;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        border: 1px solid #ebeef5;
+        padding: 8px 12px;
+        text-align: left;
+      }
+      th {
+        background: #f5f7fa;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #e65d6e;
+        font-family: Consolas, monospace;
+      }
+      .badge {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: #e6a23c;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>02 - 具名插槽（Named Slots）与 v-slot 语法</h1>
+
+      <div class="intro">
+        <b>💡 为什么需要具名插槽？</b><br />
+        当一个子组件需要分发<b>多个不同的区域</b>（例如经典的三段式：头部 header、主体 body、底部 footer）时，默认插槽无法区分“哪段内容填进哪个坑”。<br />
+        具名插槽通过给 <code>&lt;slot name="xxx"&gt;</code> 指定名字，实现多坑位定向分发。
+      </div>
+
+      <!-- 交互演示区 -->
+      <div class="box">
+        <h2>✨ 交互演示：通用卡片组件 (my-card)</h2>
+        <div class="card-wrapper">
+          <!-- 演示 1：完整分发 header、默认主体、footer -->
+          <div class="card-item">
+            <p style="font-weight: bold; font-size: 13px; color: #67c23a;">
+              卡片 1：使用标准 <code>v-slot:插槽名</code> 分发所有区域
+            </p>
+            <my-card>
+              <!-- 头部具名插槽 -->
+              <template v-slot:header>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>📰 今日热点新闻</span>
+                  <span class="badge">Hot</span>
+                </div>
+              </template>
+
+              <!-- 主体：默认插槽（未命名的 slot 名字默认为 default） -->
+              <template v-slot:default>
+                <p style="margin: 0; color: #606266;">
+                  Vue 2.6 推出了全新的 <code>v-slot</code> 语法，统一了具名插槽与作用域插槽的用法，写法更加优雅清晰。
+                </p>
+              </template>
+
+              <!-- 底部具名插槽 -->
+              <template v-slot:footer>
+                <div style="text-align: right;">
+                  <button @click="readMore">查看全文</button>
+                </div>
+              </template>
+            </my-card>
+          </div>
+
+          <!-- 演示 2：使用 # 简写 + 省略 footer（测试后备内容） -->
+          <div class="card-item">
+            <p style="font-weight: bold; font-size: 13px; color: #409eff;">
+              卡片 2：使用 <code>#</code> 语法糖简写，且不传 footer
+            </p>
+            <my-card>
+              <!-- 简写形式：#header 等价于 v-slot:header -->
+              <template #header>
+                <span>👤 个人信息卡片</span>
+              </template>
+
+              <!-- 默认主体可以省略 template default 包裹，直接写内部内容 -->
+              <div>
+                <p>姓名：{{ user.name }}</p>
+                <p>职业：{{ user.role }}</p>
+              </div>
+
+              <!-- 这里没有提供 footer，子组件将自动渲染其后备内容 -->
+            </my-card>
+          </div>
+        </div>
+      </div>
+
+      <!-- 语法对比与规则表 -->
+      <div class="box">
+        <h2>📖 核心语法演进与对比（Vue 2.6+ 新规范）</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>插槽类型</th>
+              <th>子组件定义方式</th>
+              <th>父组件推荐新语法 (v-slot / #)</th>
+              <th>父组件已废弃的老语法 (slot 属性)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>具名插槽</b></td>
+              <td><code>&lt;slot name="header"&gt;&lt;/slot&gt;</code></td>
+              <td>
+                <code>&lt;template v-slot:header&gt;...&lt;/template&gt;</code><br />
+                简写：<code>&lt;template #header&gt;...&lt;/template&gt;</code>
+              </td>
+              <td><code>&lt;div slot="header"&gt;...&lt;/div&gt;</code></td>
+            </tr>
+            <tr>
+              <td><b>默认插槽</b></td>
+              <td><code>&lt;slot&gt;&lt;/slot&gt;</code>（等价于 <code>name="default"</code>）</td>
+              <td>
+                <code>&lt;template v-slot:default&gt;...&lt;/template&gt;</code><br />
+                简写：<code>&lt;template #default&gt;...&lt;/template&gt;</code>
+              </td>
+              <td>无需指定属性，直接嵌套</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="background: #fffbe6; border: 1px solid #ffe58f; padding: 12px; border-radius: 4px; margin-top: 14px; font-size: 13px;">
+          <b>⚠️ 避坑提醒：</b>
+          <code>v-slot</code> 只能添加在 <code>&lt;template&gt;</code> 上（只有一种例外：当组件只有默认插槽时可以直接写在组件标签上）。不要直接写在普通 html 标签（如 <code>&lt;div v-slot:header&gt;</code> 会报错）。
+        </div>
+      </div>
+    </div>
+
+    <!-- 引入 Vue 2.7 -->
+    <script src="../js/vue.js"></script>
+    <script>
+      // 注册 my-card 卡片组件
+      Vue.component("my-card", {
+        template: `
+          <div style="border: 1px solid #dcdfe6; border-radius: 8px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); overflow: hidden;">
+            <!-- 头部插槽区 -->
+            <div style="padding: 12px 16px; background: #fafafa; border-bottom: 1px solid #ebeef5; font-weight: bold;">
+              <slot name="header">
+                <!-- 头部后备内容 -->
+                <span style="color: #909399;">默认卡片标题</span>
+              </slot>
+            </div>
+
+            <!-- 主体插槽区（默认插槽） -->
+            <div style="padding: 16px; font-size: 14px; min-height: 50px;">
+              <slot>
+                <span style="color: #c0c4cc;">默认内容区域</span>
+              </slot>
+            </div>
+
+            <!-- 底部操作区 -->
+            <div style="padding: 10px 16px; background: #fafafa; border-top: 1px solid #ebeef5; font-size: 13px;">
+              <slot name="footer">
+                <!-- 底部后备内容 -->
+                <span style="color: #c0c4cc; font-size: 12px;">暂无操作按钮</span>
+              </slot>
+            </div>
+          </div>
+        `,
+      });
+
+      // 根实例
+      new Vue({
+        el: "#app",
+        data: {
+          user: {
+            name: "李四",
+            role: "前端开发工程师",
+          },
+        },
+        methods: {
+          readMore() {
+            alert("点击了查看全文");
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

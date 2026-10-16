@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>03 - 作用域插槽（Scoped Slots）</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #409eff;
+      }
+      .intro {
+        background: #ecf5ff;
+        border-left: 4px solid #409eff;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        border: 1px solid #ebeef5;
+        padding: 10px 14px;
+        text-align: left;
+      }
+      th {
+        background: #f5f7fa;
+      }
+      button {
+        background: #409eff;
+        color: #fff;
+        border: none;
+        padding: 5px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        margin-right: 6px;
+      }
+      button:hover {
+        background: #66b1ff;
+      }
+      button.danger {
+        background: #f56c6c;
+      }
+      button.danger:hover {
+        background: #f78989;
+      }
+      .status-tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+      }
+      .status-success {
+        background: #f0f9eb;
+        color: #67c23a;
+        border: 1px solid #c2e7b0;
+      }
+      .status-warning {
+        background: #fdf6ec;
+        color: #e6a23c;
+        border: 1px solid #f5dab1;
+      }
+      .status-danger {
+        background: #fef0f0;
+        color: #f56c6c;
+        border: 1px solid #fbc4c4;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #e65d6e;
+        font-family: Consolas, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>03 - 作用域插槽（Scoped Slots）</h1>
+
+      <div class="intro">
+        <b>💡 为什么需要作用域插槽？（面试极高频考点）</b><br />
+        还记得 01 文件讲的“编译作用域”吗？插槽内容在父组件里写，默认只能读取父组件的数据。<br />
+        但在很多场景下，<strong>数据在子组件内部（比如表格列表、分页数据），但每一行的展示结构（UI / 标签 / 操作按钮）想由父组件定制</strong>！<br />
+        <strong>作用域插槽的本质：</strong>子组件在 <code>&lt;slot&gt;</code> 身上把自己的数据往外抛，父组件在 <code>v-slot</code> 处接收这些数据并决定如何渲染。
+      </div>
+
+      <!-- 交互演示区 -->
+      <div class="box">
+        <h2>✨ 交互演示：通用商品表格组件 (my-table)</h2>
+        <p style="font-size: 14px; color: #606266;">
+          <code>my-table</code> 负责处理列表遍历和基础表格样式，而每行的<strong>“商品状态”</strong>和<strong>“操作列”</strong>由父组件通过作用域插槽定制渲染：
+        </p>
+
+        <!-- 使用子组件 my-table，传入数据源 list -->
+        <my-table :data-list="goodsList">
+          <!-- 1. 定制“状态”列：利用作用域插槽解构 row 数据 -->
+          <template #status="{ row }">
+            <span v-if="row.status === 1" class="status-tag status-success">🟢 热卖中</span>
+            <span v-else-if="row.status === 0" class="status-tag status-warning">🟡 缺货中</span>
+            <span v-else class="status-tag status-danger">🔴 已下架</span>
+          </template>
+
+          <!-- 2. 定制“操作”列：拿到 row 和 index，实现父组件交互逻辑 -->
+          <template #action="{ row, index }">
+            <button @click="handleEdit(row)">编辑价格</button>
+            <button class="danger" @click="handleDelete(index, row)">删除</button>
+          </template>
+        </my-table>
+      </div>
+
+      <!-- 核心原理与面试总结 -->
+      <div class="box">
+        <h2>📖 核心原理与写法全景对比</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>步骤</th>
+              <th>代码示例</th>
+              <th>执行逻辑说明</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>1. 子组件暴露数据</b></td>
+              <td><code>&lt;slot name="action" :row="item" :index="idx"&gt;&lt;/slot&gt;</code></td>
+              <td>在 <code>&lt;slot&gt;</code> 上使用属性绑定的方式传参，这些属性会被打包成一个对象。</td>
+            </tr>
+            <tr>
+              <td><b>2. 父组件完整接收</b></td>
+              <td><code>&lt;template #action="scope"&gt;{{ scope.row.name }}&lt;/template&gt;</code></td>
+              <td><code>scope</code> 是子组件传出来的对象（包含 <code>row</code>、<code>index</code>）。</td>
+            </tr>
+            <tr>
+              <td><b>3. 父组件解构接收 (推荐)</b></td>
+              <td><code>&lt;template #action="{ row, index }"&gt;...&lt;/template&gt;</code></td>
+              <td>利用 ES6 解构赋值，直接提取内部属性，写法最简洁清晰。</td>
+            </tr>
+            <tr>
+              <td><b>4. 默认插槽简写</b></td>
+              <td><code>&lt;my-list v-slot="{ item }"&gt;{{ item.title }}&lt;/my-list&gt;</code></td>
+              <td>当组件<strong>只有默认插槽</strong>时，<code>v-slot</code> 可以直接写在组件标签自身上。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 引入 Vue 2.7 -->
+    <script src="../js/vue.js"></script>
+    <script>
+      // 注册通用的表格子组件
+      Vue.component("my-table", {
+        props: {
+          dataList: {
+            type: Array,
+            default: () => [],
+          },
+        },
+        template: `
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 80px;">序号</th>
+                <th>商品名称</th>
+                <th style="width: 120px;">单价</th>
+                <th style="width: 130px;">状态</th>
+                <th style="width: 180px;">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in dataList" :key="item.id">
+                <td>{{ index + 1 }}</td>
+                <td>{{ item.name }}</td>
+                <td>¥ {{ item.price.toFixed(2) }}</td>
+
+                <!-- 作用域插槽 1：状态列，把 item 传给父组件 -->
+                <td>
+                  <slot name="status" :row="item" :index="index">
+                    <!-- 如果父组件不定制，默认直接展示状态码 -->
+                    <span>状态码: {{ item.status }}</span>
+                  </slot>
+                </td>
+
+                <!-- 作用域插槽 2：操作列，把 item 和 index 都传出去 -->
+                <td>
+                  <slot name="action" :row="item" :index="index">
+                    <span style="color: #c0c4cc; font-size: 12px;">无操作</span>
+                  </slot>
+                </td>
+              </tr>
+              <tr v-if="dataList.length === 0">
+                <td colspan="5" style="text-align: center; color: #909399;">暂无数据</td>
+              </tr>
+            </tbody>
+          </table>
+        `,
+      });
+
+      // 根实例（父组件）
+      new Vue({
+        el: "#app",
+        data: {
+          goodsList: [
+            { id: 101, name: "Vue.js 设计与实现", price: 89.9, status: 1 },
+            { id: 102, name: "JavaScript 高级程序设计", price: 129.0, status: 0 },
+            { id: 103, name: "CSS 揭秘", price: 59.0, status: 2 },
+          ],
+        },
+        methods: {
+          handleEdit(row) {
+            const newPrice = prompt(`请输入「${row.name}」的新价格:`, row.price);
+            if (newPrice !== null && !isNaN(Number(newPrice))) {
+              row.price = Number(newPrice);
+            }
+          },
+          handleDelete(index, row) {
+            if (confirm(`确定要删除「${row.name}」吗？`)) {
+              this.goodsList.splice(index, 1);
+            }
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

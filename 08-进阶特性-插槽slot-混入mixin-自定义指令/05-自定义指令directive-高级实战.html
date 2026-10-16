@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>05 - 自定义指令高级实战（权限/防重/点击外部）</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #409eff;
+      }
+      .intro {
+        background: #ecf5ff;
+        border-left: 4px solid #409eff;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      button {
+        background: #409eff;
+        color: #fff;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        margin-right: 8px;
+        transition: 0.2s;
+      }
+      button:hover {
+        background: #66b1ff;
+      }
+      button:disabled {
+        background: #a0cfff !important;
+        cursor: not-allowed;
+      }
+      button.danger {
+        background: #f56c6c;
+      }
+      button.danger:hover {
+        background: #f78989;
+      }
+      .dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #fff;
+        border: 1px solid #e4e7ed;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+        padding: 8px 0;
+        min-width: 140px;
+        z-index: 100;
+        margin-top: 6px;
+      }
+      .dropdown-item {
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .dropdown-item:hover {
+        background: #f5f7fa;
+        color: #409eff;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #e65d6e;
+        font-family: Consolas, monospace;
+      }
+      .pill {
+        display: inline-block;
+        font-size: 12px;
+        padding: 2px 10px;
+        border-radius: 12px;
+        background: #e1f3d8;
+        color: #67c23a;
+        margin-right: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>05 - 自定义指令企业级实战（权限 / 防重 / 点击外部）</h1>
+
+      <div class="intro">
+        <b>💡 本节目标：</b>掌握企业后台管理系统中 3 个最高频的自定义指令封装：
+        <br />1. <code>v-permission</code>：按钮级细粒度权限控制（根据角色无权限则移除 DOM）
+        <br />2. <code>v-debounce-click</code>：防重复点击/快速连击限制
+        <br />3. <code>v-click-outside</code>：点击元素外部自动收起（下拉框、弹层必备）
+      </div>
+
+      <!-- 实战 1：权限指令 -->
+      <div class="box">
+        <h2>✨ 实战 1：按钮级权限控制 (v-permission)</h2>
+        <div style="margin-bottom: 12px; font-size: 14px;">
+          <span>当前登录用户身份：</span>
+          <label style="margin-right: 12px;"><input type="radio" value="admin" v-model="currentRole" /> 超级管理员 (admin)</label>
+          <label><input type="radio" value="guest" v-model="currentRole" /> 普通访客 (guest)</label>
+        </div>
+
+        <div style="border: 1px dashed #dcdfe6; padding: 14px; border-radius: 6px;">
+          <!-- 所有人可见 -->
+          <button @click="handleAction('查看数据')">👁️ 查看数据（所有人可见）</button>
+
+          <!-- 仅 admin 可见的按钮：使用 v-permission 控制 -->
+          <span :key="currentRole">
+            <button v-permission="['admin']" @click="handleAction('编辑系统配置')">
+              ✏️ 编辑系统配置 (限 admin)
+            </button>
+            <button v-permission="['admin']" class="danger" @click="handleAction('删除数据库')">
+              🗑️ 删除数据库 (限 admin)
+            </button>
+          </span>
+        </div>
+      </div>
+
+      <!-- 实战 2：防重复点击指令 -->
+      <div class="box">
+        <h2>✨ 实战 2：防重复点击指令 (v-prevent-reclick)</h2>
+        <p style="font-size: 14px; color: #606266;">
+          点击“提交订单”后，指令会自动禁用按钮 2 秒并显示倒计时，防止用户误触连击：
+        </p>
+        <button v-prevent-reclick="2000" @click="submitOrder">
+          📦 立即提交订单
+        </button>
+        <span style="font-size: 13px; color: #909399; margin-left: 10px;">
+          已触发下单请求次数：<b style="color: #409eff;">{{ submitCount }}</b>
+        </span>
+      </div>
+
+      <!-- 实战 3：点击外部收起下拉框 -->
+      <div class="box">
+        <h2>✨ 实战 3：点击元素外部关闭 (v-click-outside)</h2>
+        <p style="font-size: 14px; color: #606266;">
+          点击按钮展开下拉菜单；点击菜单外部的任意空白处，下拉菜单自动收起：
+        </p>
+        <div class="dropdown" v-click-outside="closeDropdown">
+          <button @click="dropdownOpen = !dropdownOpen">
+            更多操作 ▾
+          </button>
+          <div class="dropdown-menu" v-show="dropdownOpen">
+            <div class="dropdown-item" @click="selectMenu('导出 Excel')">📊 导出 Excel</div>
+            <div class="dropdown-item" @click="selectMenu('打印报表')">🖨️ 打印报表</div>
+            <div class="dropdown-item" @click="selectMenu('分享链接')">🔗 分享链接</div>
+          </div>
+        </div>
+        <span style="margin-left: 14px; font-size: 13px; color: #67c23a;">
+          下拉状态：{{ dropdownOpen ? '打开' : '已关闭' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- 引入 Vue 2.7 -->
+    <script src="../js/vue.js"></script>
+    <script>
+      // ================= 指令 1：v-permission 权限指令 =================
+      Vue.directive("permission", {
+        inserted(el, binding) {
+          const { value: requiredRoles } = binding;
+          // 获取当前用户的权限角色（这里从根实例读取）
+          const userRole = vm.currentRole;
+
+          if (Array.isArray(requiredRoles) && requiredRoles.length > 0) {
+            const hasPermission = requiredRoles.includes(userRole);
+            // 如果没有权限，直接从父节点中彻底移除该真实 DOM
+            if (!hasPermission) {
+              el.parentNode && el.parentNode.removeChild(el);
+            }
+          }
+        },
+      });
+
+      // ================= 指令 2：v-prevent-reclick 防重点击指令 =================
+      Vue.directive("prevent-reclick", {
+        inserted(el, binding) {
+          const delay = binding.value || 1500; // 默认防重间隔 1.5 秒
+          el.addEventListener("click", () => {
+            if (!el.disabled) {
+              el.disabled = true;
+              const originalText = el.innerText;
+              el.innerText = `${originalText} (处理中...)`;
+              setTimeout(() => {
+                el.disabled = false;
+                el.innerText = originalText;
+              }, delay);
+            }
+          });
+        },
+      });
+
+      // ================= 指令 3：v-click-outside 点击外部关闭指令 =================
+      Vue.directive("click-outside", {
+        bind(el, binding) {
+          // 在 el 上存储 handler 引用，方便 unbind 时注销
+          el.__clickOutsideHandler__ = (event) => {
+            // 判断点击目标是否在当前元素内部，如果是外部，则执行绑定的回调函数
+            if (!el.contains(event.target)) {
+              if (typeof binding.value === "function") {
+                binding.value(event);
+              }
+            }
+          };
+          // 监听 document 的点击捕获/冒泡
+          document.addEventListener("click", el.__clickOutsideHandler__);
+        },
+        unbind(el) {
+          // 极其重要：在解绑钩子中销毁全局监听，防止内存泄漏！
+          document.removeEventListener("click", el.__clickOutsideHandler__);
+          delete el.__clickOutsideHandler__;
+        },
+      });
+
+      // 根实例
+      const vm = new Vue({
+        el: "#app",
+        data: {
+          currentRole: "guest",
+          submitCount: 0,
+          dropdownOpen: false,
+        },
+        methods: {
+          handleAction(act) {
+            alert(`执行成功：${act}`);
+          },
+          submitOrder() {
+            this.submitCount++;
+          },
+          closeDropdown() {
+            this.dropdownOpen = false;
+          },
+          selectMenu(name) {
+            alert(`点击了菜单项：${name}`);
+            this.dropdownOpen = false;
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

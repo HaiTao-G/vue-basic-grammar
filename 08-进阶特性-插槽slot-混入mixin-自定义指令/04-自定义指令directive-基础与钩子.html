@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>04 - 自定义指令基础与生命周期钩子</title>
+    <style>
+      body {
+        font-family: "Microsoft YaHei", sans-serif;
+        margin: 0;
+        padding: 30px;
+        background: #f5f7fa;
+        color: #303133;
+        line-height: 1.7;
+      }
+      h1 {
+        font-size: 20px;
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 12px;
+        color: #409eff;
+      }
+      .intro {
+        background: #ecf5ff;
+        border-left: 4px solid #409eff;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        margin-bottom: 16px;
+      }
+      .box {
+        background: #fff;
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin: 14px 0;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+      }
+      input {
+        padding: 8px 12px;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+        outline: none;
+        transition: 0.2s;
+        font-size: 14px;
+      }
+      input:focus {
+        border-color: #409eff;
+        box-shadow: 0 0 4px rgba(64, 158, 255, 0.3);
+      }
+      button {
+        background: #409eff;
+        color: #fff;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        margin-right: 8px;
+      }
+      button:hover {
+        background: #66b1ff;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+        margin-top: 10px;
+      }
+      th,
+      td {
+        border: 1px solid #ebeef5;
+        padding: 9px 12px;
+        text-align: left;
+      }
+      th {
+        background: #f5f7fa;
+      }
+      code {
+        background: #f0f2f5;
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #e65d6e;
+        font-family: Consolas, monospace;
+      }
+      .log-box {
+        background: #2b2b2b;
+        color: #a9b7c6;
+        padding: 12px;
+        border-radius: 6px;
+        font-family: Consolas, monospace;
+        font-size: 12px;
+        max-height: 160px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>04 - 自定义指令（Directive）基础与生命周期钩子</h1>
+
+      <div class="intro">
+        <b>💡 为什么需要自定义指令？</b><br />
+        Vue 的核心思想是数据驱动视图，绝大部分 DOM 操作由 Vue 指令（如 <code>v-if</code>、<code>v-model</code>）代劳。<br />
+        但在某些场景下，我们仍然需要<strong>直接对底层真实 DOM 元素进行定制操作</strong>（例如页面渲染后输入框自动获得焦点、监听 DOM 原生滚动、绑定外部点击事件等）。这就是自定义指令的用武之地。
+      </div>
+
+      <!-- 交互演示区 -->
+      <div class="box">
+        <h2>✨ 交互演示 1：自动获取焦点指令 (v-focus)</h2>
+        <p style="font-size: 14px; color: #606266;">
+          点击下方按钮动态插入输入框，观察它是否能在插入页面瞬间<strong>自动获取焦点</strong>：
+        </p>
+        <button @click="showInput = !showInput">
+          {{ showInput ? '销毁输入框' : '创建并聚焦输入框' }}
+        </button>
+        <div style="margin-top: 12px;" v-if="showInput">
+          <!-- 挂载自定义指令 v-focus -->
+          <input v-focus placeholder="我已经自动获取了光标焦点" style="width: 280px;" />
+        </div>
+      </div>
+
+      <div class="box">
+        <h2>✨ 交互演示 2：函数简写形式与动态变色指令 (v-color)</h2>
+        <p style="font-size: 14px; color: #606266;">
+          修改颜色选择器或数值，触发指令更新并查看日志输出：
+        </p>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+          <label>选择颜色：<input type="color" v-model="themeColor" /></label>
+          <button @click="count++">增加计数: {{ count }}</button>
+        </div>
+
+        <!-- 挂载 v-color 指令并传递响应式数据作为 value -->
+        <div v-color="themeColor" style="padding: 12px; border: 1px dashed; border-radius: 4px; font-weight: bold;">
+          当前文字颜色由指令实时绑定控制：{{ themeColor }} (当前计数: {{ count }})
+        </div>
+
+        <h3 style="font-size: 13px; margin: 14px 0 6px;">指令生命周期触发日志：</h3>
+        <div class="log-box">
+          <div v-for="(log, idx) in logs" :key="idx">{{ log }}</div>
+        </div>
+      </div>
+
+      <!-- 指令钩子函数知识库 -->
+      <div class="box">
+        <h2>📖 自定义指令的 5 个生命周期钩子函数</h2>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 18%;">钩子函数</th>
+              <th style="width: 32%;">触发时机</th>
+              <th style="width: 50%;">典型应用场景与注意事项</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>bind</b></td>
+              <td>只调用一次，指令第一次绑定到元素时触发</td>
+              <td>适合进行一次性的样式设置、初始化属性操作（此时元素可能尚未插入父 DOM，调用 <code>el.focus()</code> 无效！）。</td>
+            </tr>
+            <tr>
+              <td><b>inserted (最常用)</b></td>
+              <td>被绑定元素<b>插入父节点时</b>调用</td>
+              <td>元素已真正挂载到页面上，保证父节点已存在。<b>获取焦点 (el.focus())、读取 offsetHeight 等必须在 inserted 中做</b>。</td>
+            </tr>
+            <tr>
+              <td><b>update</b></td>
+              <td>所在组件的 VNode 更新时调用</td>
+              <td>组件数据更新时触发，但是子 VNode 可能还未完全更新。</td>
+            </tr>
+            <tr>
+              <td><b>componentUpdated</b></td>
+              <td>指令所在组件的 VNode <b>及其子 VNode</b> 全部更新后调用</td>
+              <td>当指令依赖子组件更新后的最新 DOM 状态时使用。</td>
+            </tr>
+            <tr>
+              <td><b>unbind</b></td>
+              <td>只调用一次，指令与元素解绑时调用</td>
+              <td>元素销毁时触发，<b>必须在此清理定时器、解绑 window / document 原生事件监听器</b>，防止内存泄漏！</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 引入 Vue 2.7 -->
+    <script src="../js/vue.js"></script>
+    <script>
+      // 1. 全局注册指令：Vue.directive('指令名', 配置对象)
+      // 注意：定义时不带 v-，模板使用时加 v-
+      Vue.directive("focus", {
+        // 为什么用 inserted 而不是 bind？
+        // 因为 bind 阶段元素还只是内存中的虚拟 DOM 节点，尚未插入页面文档流中，执行 focus() 不会起效
+        inserted(el) {
+          el.focus();
+        },
+      });
+
+      // 2. 根实例
+      const vm = new Vue({
+        el: "#app",
+        data: {
+          showInput: false,
+          themeColor: "#409eff",
+          count: 0,
+          logs: [],
+        },
+        // 局部注册自定义指令
+        directives: {
+          color: {
+            bind(el, binding) {
+              vm.addLog(`[color 指令 bind] 初始绑定，值: ${binding.value}`);
+              el.style.color = binding.value;
+              el.style.borderColor = binding.value;
+            },
+            update(el, binding) {
+              if (binding.value !== binding.oldValue) {
+                vm.addLog(
+                  `[color 指令 update] 值改变: 从 ${binding.oldValue} -> ${binding.value}`
+                );
+                el.style.color = binding.value;
+                el.style.borderColor = binding.value;
+              }
+            },
+            unbind(el) {
+              vm.addLog(`[color 指令 unbind] 元素解绑销毁`);
+            },
+          },
+        },
+        methods: {
+          addLog(msg) {
+            const time = new Date().toLocaleTimeString();
+            this.logs.unshift(`[${time}] ${msg}`);
+          },
+        },
+        created() {
+          this.addLog("页面初始化完成");
+        },
+      });
+    </script>
+  </body>
+</html>
